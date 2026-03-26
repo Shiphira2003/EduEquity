@@ -36,6 +36,32 @@ export const USER_ROLES = {
 } as const;
 
 /**
+ * Bursary Type / Fund Source Constants
+ */
+export const BURSARY_TYPES = {
+    MCA: 'MCA',
+    CDF: 'CDF',
+    COUNTY: 'COUNTY',
+    NATIONAL: 'NATIONAL',
+} as const;
+
+export const BURSARY_TYPE_LABELS = {
+    MCA: 'Mobilization on Contentious Areas',
+    CDF: 'Constituency Development Fund',
+    COUNTY: 'County Government Budget',
+    NATIONAL: 'National Government Budget',
+} as const;
+
+/**
+ * Cash Flow Transaction Types
+ */
+export const CASH_FLOW_TYPES = {
+    ALLOCATION: 'ALLOCATION',
+    DISBURSEMENT: 'DISBURSEMENT',
+    REVERSAL: 'REVERSAL',
+} as const;
+
+/**
  * Status Badge Colors
  */
 export const STATUS_COLORS: Record<string, string> = {

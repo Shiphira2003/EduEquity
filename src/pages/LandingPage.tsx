@@ -165,7 +165,7 @@ const LandingPage: React.FC = () => {
                                 title: "Create Account",
                                 desc: "Register in minutes using your National ID or Student credentials. Secure and simple.",
                                 icon: Users,
-                                link: "/auth/login"
+                                link: "/register-student"
                             },
                             {
                                 title: "Submit Application",
