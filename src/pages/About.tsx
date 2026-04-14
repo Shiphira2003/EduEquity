@@ -23,20 +23,20 @@ const About: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center space-y-8 max-w-3xl mx-auto">
                         <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full text-sm font-medium text-primary shadow-sm border border-gray-100">
-                            <span className="w-2 h-2 rounded-full bg-action animate-pulse"></span>
-                            About EduEquity
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            About BursarHub
                         </div>
 
-                        <h1 className="text-5xl md:text-6xl font-extrabold text-primary leading-[1.1] tracking-tight">
+                        <h1 className="text-5xl md:text-6xl font-extrabold text-black leading-[1.1] tracking-tight">
                             Bridging the Gap in
                             <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark">
                                 Education Funding
                             </span>
                         </h1>
 
-                        <p className="text-xl text-text-light leading-relaxed max-w-2xl mx-auto">
-                            EduEquity is a revolutionary digital platform designed to democratize access to education financing. We believe every deserving student should have access to funds without barriers or bureaucracy.
+                        <p className="text-xl text-zinc-500 leading-relaxed max-w-2xl mx-auto">
+                            BursarHub is a revolutionary digital platform designed to democratize access to education financing. We believe every deserving student should have access to funds without barriers or bureaucracy.
                         </p>
                     </div>
                 </div>
@@ -48,68 +48,68 @@ const About: React.FC = () => {
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         {/* Mission */}
                         <div className="space-y-6">
-                            <div className="inline-flex items-center gap-3 bg-primary/5 px-4 py-2 rounded-lg">
-                                <Target className="w-5 h-5 text-primary" />
-                                <span className="text-sm font-semibold text-primary">Our Mission</span>
+                            <div className="inline-flex items-center gap-3 bg-zinc-50 px-4 py-2 rounded-lg">
+                                <Target className="w-5 h-5 text-black" />
+                                <span className="text-sm font-semibold text-black">Our Mission</span>
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-primary">
+                            <h2 className="text-3xl md:text-4xl font-bold text-black">
                                 Empower Through Education
                             </h2>
-                            <p className="text-lg text-text-light leading-relaxed">
+                            <p className="text-lg text-zinc-500 leading-relaxed">
                                 Our mission is to create a streamlined, transparent, and accessible pathway for students to access educational funding. We aim to eliminate the barriers that prevent talented students from pursuing their dreams.
                             </p>
                             <ul className="space-y-3">
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-action/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-action"></div>
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
                                     </div>
-                                    <span className="text-text">Digital-first approach to funding</span>
+                                    <span className="text-black">Digital-first approach to funding</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-action/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-action"></div>
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
                                     </div>
-                                    <span className="text-text">Reduced processing time & bureaucracy</span>
+                                    <span className="text-black">Reduced processing time & bureaucracy</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-action/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-action"></div>
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
                                     </div>
-                                    <span className="text-text">Transparent and fair allocation</span>
+                                    <span className="text-black">Transparent and fair allocation</span>
                                 </li>
                             </ul>
                         </div>
 
                         {/* Vision */}
                         <div className="space-y-6">
-                            <div className="inline-flex items-center gap-3 bg-action/5 px-4 py-2 rounded-lg">
-                                <Heart className="w-5 h-5 text-action" />
-                                <span className="text-sm font-semibold text-action">Our Vision</span>
+                            <div className="inline-flex items-center gap-3 bg-primary/5 px-4 py-2 rounded-lg">
+                                <Heart className="w-5 h-5 text-primary" />
+                                <span className="text-sm font-semibold text-primary">Our Vision</span>
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-primary">
+                            <h2 className="text-3xl md:text-4xl font-bold text-black">
                                 Education for All
                             </h2>
-                            <p className="text-lg text-text-light leading-relaxed">
+                            <p className="text-lg text-zinc-500 leading-relaxed">
                                 We envision a future where financial constraints are no longer a barrier to quality education. A world where every student, regardless of their economic background, can access the funding they need to succeed.
                             </p>
                             <ul className="space-y-3">
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <div className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-black"></div>
                                     </div>
-                                    <span className="text-text">Nationwide coverage & accessibility</span>
+                                    <span className="text-black">Nationwide coverage & accessibility</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <div className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-black"></div>
                                     </div>
-                                    <span className="text-text">Technology-driven solutions</span>
+                                    <span className="text-black">Technology-driven solutions</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 flex-shrink-0">
-                                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <div className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center mt-1 flex-shrink-0">
+                                        <div className="w-2 h-2 rounded-full bg-black"></div>
                                     </div>
-                                    <span className="text-text">Partnerships across institutions</span>
+                                    <span className="text-black">Partnerships across institutions</span>
                                 </li>
                             </ul>
                         </div>
@@ -139,7 +139,7 @@ const About: React.FC = () => {
                                 title: "Efficiency",
                                 desc: "Leveraging technology to reduce delays and streamline processes. Quick approvals mean faster support.",
                                 icon: Zap,
-                                color: "action",
+                                color: "black",
                             },
                             {
                                 title: "Inclusivity",
@@ -153,12 +153,12 @@ const About: React.FC = () => {
                                 <div key={idx} className="bg-surface p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group">
                                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 ${value.color === 'primary'
                                             ? 'bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white'
-                                            : 'bg-action/5 text-action group-hover:bg-action group-hover:text-white'
+                                            : 'bg-black/5 text-black group-hover:bg-black group-hover:text-white'
                                         }`}>
                                         <IconComponent className="w-8 h-8" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-primary mb-3">{value.title}</h3>
-                                    <p className="text-text-light leading-relaxed">{value.desc}</p>
+                                    <h3 className="text-xl font-bold text-black mb-3">{value.title}</h3>
+                                    <p className="text-zinc-500 leading-relaxed">{value.desc}</p>
                                 </div>
                             );
                         })}

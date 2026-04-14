@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getMyApplications } from '../../api/student.api';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 import {
     FileText,
     CheckCircle2,
@@ -10,7 +11,10 @@ import {
     Calendar,
     ArrowRight,
     UserCircle,
-    Bell
+    Bell,
+    Lock,
+    Plus,
+    Target
 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -18,10 +22,12 @@ import { Button } from '../../components/Button';
 const StudentDashboard: React.FC = () => {
     const { user } = useAuth();
     const [applications, setApplications] = useState<any[]>([]);
+    const [publicFundSources, setPublicFundSources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const location = useLocation();
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [latestRank, setLatestRank] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,10 +41,26 @@ const StudentDashboard: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await getMyApplications();
-                setApplications(data);
+                const [appData, fundData] = await Promise.all([
+                    getMyApplications(),
+                    api.get('/fund-sources/public')
+                ]);
+                setApplications(appData);
+                setPublicFundSources(fundData.data?.data || []);
+
+                // Fetch rank for the latest app if it's pending
+                if (appData.length > 0 && appData[0].status === 'PENDING') {
+                    try {
+                        const rankRes = await api.get(`/ranking/student/${appData[0].id}`);
+                        if (rankRes.data.success) {
+                            setLatestRank(rankRes.data.data.rank);
+                        }
+                    } catch (e) {
+                        console.error("Rank fetch failed", e);
+                    }
+                }
             } catch (err) {
-                console.error("Failed to fetch applications", err);
+                console.error("Failed to fetch dashboard data", err);
                 setError("Failed to load application data.");
             } finally {
                 setLoading(false);
@@ -67,20 +89,41 @@ const StudentDashboard: React.FC = () => {
         }
     };
 
+    const now = new Date();
+    const openBursaries = publicFundSources.filter(b => {
+        if (!b.is_open) return false;
+        if (b.start_date && now < new Date(b.start_date)) return false;
+        if (b.end_date && now > new Date(b.end_date)) return false;
+        return true;
+    });
+
+    const hasOpenBursaries = openBursaries.length > 0;
+
     return (
-        <div className="space-y-8 animate-fade-in">
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Welcome back, <span className="font-semibold text-gray-900">{user?.email}</span></p>
+        <div className="space-y-8 animate-fade-in pb-12">
+            {/* Personalized Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-zinc-100 pb-10 mb-2">
+                <div className="animate-fade-in">
+                    <h1 className="text-4xl font-black text-black tracking-tight mb-2">
+                        Welcome back, <span className="text-primary">{user?.fullName ? user.fullName.split(' ')[0] : 'Student'}!</span>
+                    </h1>
+                    <p className="text-zinc-500 font-medium tracking-tight">Here's what's happening with your bursary applications.</p>
                 </div>
-                <div>
-                    <Link to="/student/apply">
-                        <Button variant="primary" className="shadow-lg shadow-primary/20">
-                            + New Application
-                        </Button>
-                    </Link>
+                <div className="flex items-center gap-3">
+                    {hasOpenBursaries ? (
+                        <button 
+                            onClick={() => navigate('/student/apply')}
+                            className="bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:opacity-95 transition-all flex items-center gap-3 transform hover:-translate-y-0.5 active:scale-95"
+                        >
+                            <Plus size={20} strokeWidth={3} />
+                            Apply for Funds
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-400 rounded-xl font-bold text-xs uppercase tracking-widest cursor-not-allowed">
+                            <Lock size={14} />
+                            Applications Closed
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -129,9 +172,24 @@ const StudentDashboard: React.FC = () => {
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">
                                     {latestApp ? `${latestApp.financial_year || 'Current'} Application` : 'No Active Application'}
                                 </h3>
-                                <p className="text-sm text-gray-500 mb-4">
+                                
+                                {latestApp?.status === 'PENDING' && latestRank !== null && (
+                                    <div className="flex items-center gap-2 mb-3 bg-blue-50 w-fit px-3 py-1 rounded-lg border border-blue-100">
+                                        <Target size={14} className="text-blue-600" />
+                                        <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Live Rank: #{latestRank}</span>
+                                    </div>
+                                )}
+
+                                <p className="text-sm text-gray-500 mb-2">
                                     {latestApp ? 'Latest status update' : 'Start a new application today'}
                                 </p>
+
+                                {latestApp?.status === 'REJECTED' && latestApp.rejection_reason && (
+                                    <div className="text-xs text-red-700 bg-red-50 border-l-2 border-red-500 p-2 mb-4 rounded-r shadow-sm">
+                                        <strong className="font-semibold block mb-0.5">Reason for Rejection:</strong>
+                                        {latestApp.rejection_reason}
+                                    </div>
+                                )}
 
                                 <Link to="/student/applications" className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 group-hover:gap-2 transition-all">
                                     View Details <ArrowRight className="w-4 h-4 ml-1" />
@@ -163,7 +221,7 @@ const StudentDashboard: React.FC = () => {
                             </div>
                         </Card>
 
-                        {/* Announcements Card */}
+                        {/* Timelines Card */}
                         <Card className="p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-orange-50">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
 
@@ -172,14 +230,32 @@ const StudentDashboard: React.FC = () => {
                                     <div className="p-3 bg-orange-100/50 text-orange-600 rounded-xl">
                                         <Bell className="w-6 h-6" />
                                     </div>
-                                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-md">New</span>
+                                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-md">Updates</span>
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">Announcements</h3>
-                                <p className="text-sm text-gray-500 mb-4">Submissions close on Feb 28th.</p>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">Bursary Timelines</h3>
+                                <div className="text-sm text-gray-500 mb-4 h-16 overflow-y-auto pr-1">
+                                    {publicFundSources.length === 0 ? (
+                                        <p>No timelines available.</p>
+                                    ) : (
+                                        <ul className="space-y-2">
+                                            {hasOpenBursaries ? openBursaries.map((b: any) => (
+                                                <li key={b.id} className="flex flex-col text-xs border-l-2 border-green-500 pl-2 bg-green-50/50 p-1 rounded-r">
+                                                    <span className="font-semibold text-green-700">{b.name} ({b.cycle_year}): Open</span>
+                                                    <span className="text-gray-500">Closes: {b.end_date ? new Date(b.end_date).toLocaleDateString() : 'Ongoing'}</span>
+                                                </li>
+                                            )) : (
+                                                <li className="flex flex-col text-xs border-l-2 border-red-500 pl-2 bg-red-50/50 p-1 rounded-r">
+                                                    <span className="font-semibold text-red-700">All Bursaries Closed</span>
+                                                    <span className="text-gray-500">Please wait for the next cycle.</span>
+                                                </li>
+                                            )}
+                                        </ul>
+                                    )}
+                                </div>
 
-                                <button className="text-sm font-medium text-orange-600 hover:text-orange-700">
-                                    View All Notices
-                                </button>
+                                <Link to="/student/apply" className="text-sm font-medium text-orange-600 hover:text-orange-700 mt-2 inline-block">
+                                    {hasOpenBursaries ? "Apply Now \u2192" : "View Details \u2192"}
+                                </Link>
                             </div>
                         </Card>
                     </div>

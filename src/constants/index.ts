@@ -68,8 +68,6 @@ export const STATUS_COLORS: Record<string, string> = {
     [APPLICATION_STATUS.PENDING]: 'yellow',
     [APPLICATION_STATUS.APPROVED]: 'green',
     [APPLICATION_STATUS.REJECTED]: 'red',
-    [DISBURSEMENT_STATUS.PENDING]: 'yellow',
-    [DISBURSEMENT_STATUS.APPROVED]: 'green',
     [DISBURSEMENT_STATUS.PROCESSED]: 'blue',
 } as const;
 

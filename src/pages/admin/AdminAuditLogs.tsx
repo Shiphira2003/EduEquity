@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
@@ -32,14 +32,14 @@ export default function AdminAuditLogs() {
         const doc = new jsPDF();
         doc.text("System Audit Logs", 14, 15);
         autoTable(doc, {
-            head: [['ID', 'Date', 'Admin Email', 'Action', 'App ID', 'Old', 'New']],
+            head: [['ID', 'Date', 'Admin ID', 'Admin Email', 'Action', 'App ID', 'Progress Status']],
             body: logs.map(l => [
                 l.id,
                 new Date(l.created_at).toLocaleString(),
+                l.system_id || 'System',
                 l.admin_email || 'System',
                 l.action,
                 l.application_id || '-',
-                formatJSON(l.old_value),
                 formatJSON(l.new_value)
             ]),
             startY: 20,
@@ -53,11 +53,11 @@ export default function AdminAuditLogs() {
         const ws = XLSX.utils.json_to_sheet(logs.map(l => ({
             ID: l.id,
             Date: new Date(l.created_at).toLocaleString(),
+            AdminID: l.system_id || 'System',
             AdminEmail: l.admin_email || 'System',
             Action: l.action,
             AppID: l.application_id || '-',
-            OldValue: formatJSON(l.old_value),
-            NewValue: formatJSON(l.new_value)
+            ProgressStatus: formatJSON(l.new_value)
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "AuditLogs");
@@ -66,7 +66,7 @@ export default function AdminAuditLogs() {
 
     const exportWord = async () => {
         const tableHeader = new DocxTableRow({
-            children: ['ID', 'Date', 'Admin Email', 'Action', 'App ID', 'Old Value', 'New Value'].map(h =>
+            children: ['ID', 'Date', 'Admin ID', 'Admin Email', 'Action', 'App ID', 'Progress Status'].map(h =>
                 new DocxTableCell({
                     children: [new Paragraph({ children: [new TextRun({ text: h, bold: true })] })],
                     shading: { fill: '2980b9' }
@@ -78,10 +78,10 @@ export default function AdminAuditLogs() {
             children: [
                 l.id.toString(),
                 new Date(l.created_at).toLocaleString(),
+                l.system_id || 'System',
                 l.admin_email || 'System',
                 l.action,
                 (l.application_id || '-').toString(),
-                formatJSON(l.old_value),
                 formatJSON(l.new_value)
             ].map(text => new DocxTableCell({ children: [new Paragraph(text)] }))
         }));
@@ -132,11 +132,11 @@ export default function AdminAuditLogs() {
                         <TableRow>
                             <TableHeaderCell>ID</TableHeaderCell>
                             <TableHeaderCell>Date</TableHeaderCell>
+                            <TableHeaderCell>Admin ID</TableHeaderCell>
                             <TableHeaderCell>Admin Email</TableHeaderCell>
                             <TableHeaderCell>Action</TableHeaderCell>
                             <TableHeaderCell>App ID</TableHeaderCell>
-                            <TableHeaderCell>Old Value</TableHeaderCell>
-                            <TableHeaderCell>New Value</TableHeaderCell>
+                            <TableHeaderCell>Progress Status</TableHeaderCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -144,14 +144,18 @@ export default function AdminAuditLogs() {
                             <TableRow key={l.id}>
                                 <TableCell>{l.id}</TableCell>
                                 <TableCell>{new Date(l.created_at).toLocaleString()}</TableCell>
+                                <TableCell>
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                        {l.system_id || 'SYSTEM'}
+                                    </span>
+                                </TableCell>
                                 <TableCell>{l.admin_email || 'System'}</TableCell>
                                 <TableCell className="font-medium text-gray-900">{l.action}</TableCell>
                                 <TableCell>{l.application_id || '-'}</TableCell>
-                                <TableCell className="text-xs text-gray-500 max-w-xs truncate" title={formatJSON(l.old_value)}>{formatJSON(l.old_value)}</TableCell>
                                 <TableCell className="text-xs text-green-600 max-w-xs truncate" title={formatJSON(l.new_value)}>{formatJSON(l.new_value)}</TableCell>
                             </TableRow>
                         )) : (
-                            <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">No audit logs found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500">No audit logs found.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </TableContainer>

@@ -10,8 +10,10 @@ import {
     User,
     LogOut,
     ChevronLeft,
-    Menu
+    Menu,
+    Navigation
 } from 'lucide-react';
+import logo from '../images/logo.png';
 
 const StudentLayout: React.FC = () => {
     const { user } = useAuth();
@@ -36,6 +38,7 @@ const StudentLayout: React.FC = () => {
         { to: '/student/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
         { to: '/student/applications', icon: <FileText size={20} />, label: 'My Applications' },
         { to: '/student/apply', icon: <PlusCircle size={20} />, label: 'New Application' },
+        { to: '/student/track-status', icon: <Navigation size={20} />, label: 'Track Status' },
         { to: '/student/profile', icon: <User size={20} />, label: 'My Profile' }
     ];
 
@@ -61,11 +64,11 @@ const StudentLayout: React.FC = () => {
                 `}
             >
                 <div className="h-16 flex items-center px-4 border-b border-gray-100 bg-white relative">
-                    <Link to="/" className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                        <div className="w-8 h-8 bg-primary rounded-lg flex-shrink-0 flex items-center justify-center shadow-md">
-                            <span className="text-white font-bold text-xs">E E</span>
+                    <Link to="/" className={`flex items-center gap-3 overflow-hidden transition-all duration-300 group ${isCollapsed ? 'justify-center w-full' : ''}`}>
+                        <div className="w-9 h-9 bg-white rounded-lg flex-shrink-0 flex items-center justify-center shadow-sm border border-gray-100 group-hover:shadow-md transition-all overflow-hidden p-0.5">
+                            <img src={logo} alt="BH" className="w-full h-full object-contain" />
                         </div>
-                        {!isCollapsed && <span className="font-bold text-lg text-gray-900 whitespace-nowrap">EduEquity</span>}
+                        {!isCollapsed && <span className="font-bold text-lg text-primary whitespace-nowrap">BursarHub</span>}
                     </Link>
 
                     {/* Desktop Toggle Button */}
@@ -105,7 +108,7 @@ const StudentLayout: React.FC = () => {
                 <div className="p-4 border-t border-gray-100 bg-white">
                     <button
                         onClick={handleLogout}
-                        className={`w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                        className={`w-full flex items-center px-3 py-2.5 text-sm font-medium text-zinc-500 rounded-lg hover:bg-zinc-50 hover:text-black transition-all ${isCollapsed ? 'justify-center' : ''}`}
                         title={isCollapsed ? 'Sign Out' : ''}
                     >
                         <LogOut size={20} className={`${isCollapsed ? 'mr-0' : 'mr-3'}`} />
@@ -119,10 +122,10 @@ const StudentLayout: React.FC = () => {
                 {/* Mobile Header Trigger */}
                 <div className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md">
-                            <span className="text-white font-bold text-xs">E E</span>
+                        <div className="w-8 h-8 bg-white border border-gray-100 rounded-lg flex items-center justify-center shadow-sm p-0.5 overflow-hidden">
+                            <img src={logo} alt="BH" className="w-full h-full object-contain" />
                         </div>
-                        <span className="font-bold text-lg text-gray-900">EduEquity</span>
+                        <span className="font-bold text-lg text-primary">BursarHub</span>
                     </div>
                     <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-gray-600">
                         <Menu size={24} />

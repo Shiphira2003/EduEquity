@@ -6,7 +6,8 @@ export const registerStudent = async (data: {
     full_name: string;
     national_id: string;
     institution: string;
-    course: string;
+    education_level: string;
+    course?: string;
     year_of_study: number;
 }) => {
     const res = await api.post("/students/register/student", data);

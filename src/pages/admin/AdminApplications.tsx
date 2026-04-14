@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getApplications, updateApplicationStatus } from "../../api/admin.api";
+import { getApplications, updateApplicationStatus, autoEvaluateApplications } from "../../api/admin.api";
 import api from "../../api/axios";
 import { Card } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "../../components/Table";
 import { Edit2, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pagination } from "../../components/Pagination";
 
 type Application = {
     id: number;
@@ -19,83 +22,268 @@ type Application = {
     amount_requested: number;
     amount_allocated: number;
     status: string;
-    document_url: string[];
+    taada_flag: string;
+    need_score: number | string;
+    document_url: any;
     created_at: string;
 };
 
 export default function AdminApplications() {
     const navigate = useNavigate();
-    const [applications, setApplications] = useState<Application[]>([]);
+    const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<string>("");
+    const [page, setPage] = useState(1);
+    const limit = 10;
     const [editApp, setEditApp] = useState<Application | null>(null);
 
-    const parseDocumentUrl = (input: any): string[] => {
-        if (!input) return [];
-        if (Array.isArray(input)) return input;
+    const parseDocumentUrl = (input: any): any => {
+        if (!input) return null;
         if (typeof input === "string") {
-            try { return JSON.parse(input); } catch (err) { return [input]; }
+            try { return JSON.parse(input); } catch (err) { return input; }
         }
-        return [];
+        return input;
     };
 
-    const fetchApplications = async () => {
-        try {
-            const res = await getApplications(statusFilter);
-            if (!res || !res.data) {
-                setApplications([]);
-                return;
-            }
-            const apps: Application[] = res.data.map((app: any) => ({
-                ...app,
-                document_url: parseDocumentUrl(app.document_url),
-            }));
-            setApplications(apps);
-        } catch (err) {
-            console.error("Error fetching applications:", err);
-            setApplications([]);
+    const { data: response } = useQuery({
+        queryKey: ['adminApplications', statusFilter, page],
+        queryFn: async () => {
+             const res = await getApplications(statusFilter, page, limit);
+             if (!res || !res.data) return { data: [], totalPages: 0 };
+             return {
+                 data: res.data.map((app: any) => ({
+                    ...app,
+                    document_url: parseDocumentUrl(app.document_url),
+                 })),
+                 totalPages: res.totalPages || 0
+             };
         }
-    };
+    });
 
-    useEffect(() => {
-        fetchApplications();
-    }, [statusFilter]);
+    const applications = response?.data || [];
+    const totalPages = response?.totalPages || 0;
 
     const handleStatusChange = async (appId: number, status: string) => {
         try {
             let amount_allocated = 0;
+            let rejection_reason = undefined;
             if (status === "APPROVED") {
-                const input = prompt("Enter allocated amount") || "0";
+                const { value: input } = await Swal.fire({
+                    title: 'Allocate Funds',
+                    text: 'Enter the amount to allocate (KES):',
+                    input: 'number',
+                    inputAttributes: { min: '1', step: '1' },
+                    showCancelButton: true,
+                    confirmButtonText: 'Approve & Allocate',
+                    confirmButtonColor: '#0052FF',
+                    cancelButtonColor: '#d33'
+                });
+
+                if (!input) return; // cancelled
                 amount_allocated = parseFloat(input);
-                if (amount_allocated <= 0) return alert("Amount must be greater than 0");
+                if (amount_allocated <= 0) {
+                    await Swal.fire('Invalid Amount', 'Amount must be greater than 0', 'error');
+                    return;
+                }
+            } else if (status === "REJECTED") {
+                const { value: reason } = await Swal.fire({
+                    title: 'Reject Application?',
+                    text: 'Please provide a reason for rejecting this application:',
+                    input: 'textarea',
+                    inputPlaceholder: 'Type rejection reason here...',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, reject it',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'You need to write something!';
+                        }
+                    }
+                });
+                if (!reason) return;
+                rejection_reason = reason;
             }
-            await updateApplicationStatus(appId.toString(), status, amount_allocated);
-            fetchApplications();
-        } catch (err) {
-            console.error("Error updating application status:", err);
+
+            await updateApplicationStatus(appId.toString(), status, amount_allocated, rejection_reason);
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: `Application ${status.toLowerCase()} successfully`
+            });
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] });
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.message || err.message || 'Error updating application status', 'error');
+        }
+    };
+
+    const handleViewScoreBreakdown = async (appId: number) => {
+        try {
+            Swal.fire({
+                title: 'Loading Breakdown...',
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await api.get(`/applications/${appId}/score-breakdown`);
+            const data = res.data;
+
+            Swal.fire({
+                title: `Equity Score: ${data.finalScore}/100`,
+                html: `
+                    <div class="text-left space-y-3 p-2">
+                        <div class="flex justify-between border-b pb-1">
+                            <span class="text-gray-600">Base Need Assessment:</span>
+                            <span class="font-bold">${data.baseScore} pts</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-1 text-blue-600">
+                            <span class="font-medium italic">TAADA Policy Bonus:</span>
+                            <span class="font-bold">+${data.taadaBonusScore} pts</span>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="text-xs font-bold uppercase text-gray-400 mb-2">Detailed Factors</h4>
+                            <div class="grid grid-cols-1 gap-2 text-sm">
+                                <div class="flex justify-between italic">
+                                    <span>Family Income (40%):</span>
+                                    <span>${data.factors.familyIncomeFactor}%</span>
+                                </div>
+                                <div class="flex justify-between italic">
+                                    <span>Dependents (20%):</span>
+                                    <span>${data.factors.dependentsFactor}%</span>
+                                </div>
+                                <div class="flex justify-between italic">
+                                    <span>Special Bonuses (Orphan/Disabled):</span>
+                                    <span>+${data.factors.orphanedBonus + data.factors.disabledBonus} pts</span>
+                                </div>
+                                <div class="flex justify-between italic">
+                                    <span>Academic performance:</span>
+                                    <span>${data.factors.academicFactor}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-4 leading-tight italic">
+                            * Scores are calculated automatically by the TAADA engine based on submitted verifiable data.
+                        </p>
+                    </div>
+                `,
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#0052FF'
+            });
+        } catch (err: any) {
+            Swal.fire('Error', 'Failed to load score breakdown', 'error');
         }
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm("Delete this application permanently?")) return;
+        const confirmResult = await Swal.fire({
+            title: 'Delete Application?',
+            text: "Delete this application permanently?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
         try {
             await api.delete(`/admin/applications/${id}`);
-            fetchApplications();
-        } catch (err) {
-            alert("Failed to delete application");
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: 'Application deleted successfully'
+            });
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] });
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to delete application', 'error');
         }
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const confirmResult = await Swal.fire({
+            title: 'Save Changes?',
+            text: "Save modifications to this application?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0052FF',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, save changes'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
         try {
             await api.put(`/admin/applications/${editApp!.id}`, {
                 amount_requested: editApp!.amount_requested,
                 cycle_year: editApp!.cycle_year
             });
             setEditApp(null);
-            fetchApplications();
-        } catch (err) {
-            alert("Failed to update application");
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: 'Application updated successfully'
+            });
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] });
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to update application', 'error');
+        }
+    };
+
+    const handleAutoEvaluate = async () => {
+        const confirmResult = await Swal.fire({
+            title: 'Run Auto-Evaluation?',
+            text: "This will process all PENDING applications, automatically approving highly deserving ones and rejecting those who do not meet the minimum need score.",
+            icon: 'warning',
+            input: 'number',
+            inputLabel: 'Enter the Cycle Year to evaluate (e.g. 2026)',
+            inputValue: new Date().getFullYear().toString(),
+            showCancelButton: true,
+            confirmButtonText: 'Run Auto-Evaluation',
+        });
+
+        if (!confirmResult.isConfirmed || !confirmResult.value) return;
+
+        Swal.fire({
+            title: 'Evaluating...',
+            text: 'Please wait while the system assesses the applications.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
+            const res = await autoEvaluateApplications(parseInt(confirmResult.value, 10));
+            const data = res.data;
+            
+            Swal.fire({
+                title: 'Auto-Evaluation Complete',
+                html: `
+                    <div class="text-left mt-4 text-sm">
+                        <p>Total Evaluated: <strong>${data.totalEvaluated}</strong></p>
+                        <p class="text-green-600 mt-1">Approved: <strong>${data.approved}</strong></p>
+                        <p class="text-red-600 mt-1">Rejected: <strong>${data.rejected}</strong></p>
+                        <p class="text-yellow-600 mt-1">Left as Pending (Borderline): <strong>${data.stillPending}</strong></p>
+                    </div>
+                `,
+                icon: 'success'
+            });
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] });
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to run auto-evaluation', 'error');
         }
     };
 
@@ -120,6 +308,28 @@ export default function AdminApplications() {
                                 <Button type="button" variant="outline" onClick={() => setEditApp(null)}>Cancel</Button>
                                 <Button type="submit">Save Changes</Button>
                             </div>
+                            
+                            {editApp.document_url && (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <h4 className="font-semibold text-sm mb-2 text-gray-800">Attached Documents</h4>
+                                    {Array.isArray(editApp.document_url) ? (
+                                        <ul className="text-sm list-disc pl-4 space-y-1">
+                                            {editApp.document_url.map((doc, idx) => (
+                                                <li key={idx}><a href={`/${doc.replace(/\\/g, '/')}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Legacy Doc {idx + 1}</a></li>
+                                            ))}
+                                        </ul>
+                                    ) : typeof editApp.document_url === 'object' ? (
+                                        <ul className="text-sm space-y-2">
+                                            {Object.entries(editApp.document_url).map(([key, path]) => (
+                                                <li key={key} className="flex items-center gap-2">
+                                                    <span className="font-medium text-gray-600 capitalize">{key.replace('_', ' ')}:</span>
+                                                    <a href={`/${(path as string).replace(/\\/g, '/')}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate">View File</a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : null}
+                                </div>
+                            )}
                         </form>
                     </Card>
                 </div>
@@ -140,6 +350,16 @@ export default function AdminApplications() {
                             <option value="REJECTED">Rejected</option>
                         </select>
                     </div>
+                    <div>
+                        <Button 
+                            onClick={handleAutoEvaluate} 
+                            variant="primary" 
+                            size="sm"
+                            title="Automatically evaluate PENDING applications based on Need Scores"
+                        >
+                            Run Auto-Evaluation
+                        </Button>
+                    </div>
                 </div>
 
                 <TableContainer>
@@ -148,6 +368,8 @@ export default function AdminApplications() {
                             <TableHeaderCell>Name</TableHeaderCell>
                             <TableHeaderCell>Course & Inst.</TableHeaderCell>
                             <TableHeaderCell>Amount</TableHeaderCell>
+                            <TableHeaderCell>Priority (TAADA)</TableHeaderCell>
+                            <TableHeaderCell>Need Score</TableHeaderCell>
                             <TableHeaderCell>Status</TableHeaderCell>
                             <TableHeaderCell>Approval</TableHeaderCell>
                             <TableHeaderCell>Actions</TableHeaderCell>
@@ -165,6 +387,27 @@ export default function AdminApplications() {
                                     <TableCell>
                                         <div className="font-medium">REQ: {app.amount_requested}</div>
                                         {app.amount_allocated > 0 && <div className="text-xs text-green-600">ALL: {app.amount_allocated}</div>}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant={app.taada_flag === 'FIRST_TIME' ? 'info' : 'neutral'}>
+                                                {app.taada_flag?.replace('_', ' ') || 'FIRST TIME'}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div 
+                                            className={`
+                                                inline-flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm border-2 cursor-help transition-all hover:scale-110
+                                                ${Number(app.need_score) >= 80 ? 'bg-green-50 border-green-200 text-green-700' : 
+                                                  Number(app.need_score) >= 50 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 
+                                                  'bg-red-50 border-red-200 text-red-700'}
+                                            `}
+                                            title="Click to view score breakdown"
+                                            onClick={() => handleViewScoreBreakdown(app.id)}
+                                        >
+                                            {app.need_score || '0'}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={app.status === 'APPROVED' ? 'success' : app.status === 'REJECTED' ? 'error' : 'warning'}>
@@ -193,10 +436,12 @@ export default function AdminApplications() {
                                 </TableRow>
                             ))
                         ) : (
-                            <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500">No applications found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} className="text-center py-8 text-gray-500">No applications found.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </TableContainer>
+                
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </Card>
 
         </div>

@@ -3,6 +3,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
 import api from '../../api/axios';
+import Swal from 'sweetalert2';
 
 export default function AdminAnnouncements() {
     const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -27,14 +28,36 @@ export default function AdminAnnouncements() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const confirmResult = await Swal.fire({
+            title: 'Broadcast Announcement?',
+            text: "Are you sure you want to publish this to all students?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0052FF',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, broadcast'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
         try {
             await api.post('/announcements', { title, message });
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: 'Announcement broadcasted'
+            });
+
             setTitle('');
             setMessage('');
             fetchAnnouncements();
-        } catch (err) {
-            console.error('Failed to create announcement', err);
-            alert('Failed to create announcement');
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to create announcement', 'error');
         }
     };
 
@@ -84,6 +107,7 @@ export default function AdminAnnouncements() {
                             <TableHeaderCell>Title</TableHeaderCell>
                             <TableHeaderCell>Message</TableHeaderCell>
                             <TableHeaderCell>Date</TableHeaderCell>
+                            <TableHeaderCell>Admin ID</TableHeaderCell>
                             <TableHeaderCell>Posted By</TableHeaderCell>
                         </TableRow>
                     </TableHead>
@@ -93,7 +117,12 @@ export default function AdminAnnouncements() {
                                 <TableCell className="font-semibold text-gray-900">{a.title}</TableCell>
                                 <TableCell className="text-gray-600 max-w-sm truncate">{a.message}</TableCell>
                                 <TableCell>{new Date(a.created_at).toLocaleDateString()}</TableCell>
-                                <TableCell>{a.admin_email}</TableCell>
+                                <TableCell>
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                        {a.system_id || 'SYSTEM'}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-500">{a.admin_email}</TableCell>
                             </TableRow>
                         )) : (
                             <TableRow><TableCell colSpan={4} className="text-center py-8">No announcements posted yet.</TableCell></TableRow>

@@ -4,7 +4,9 @@ import { resetPassword } from "../api/auth.api";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Lock } from "lucide-react";
+import logo from "../images/logo.png";
 import { Card } from "../components/Card";
+import Swal from "sweetalert2";
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -46,11 +48,30 @@ export default function ResetPassword() {
                 type: 'success',
                 text: "Password reset successfully! Redirecting to login..."
             });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                icon: 'success',
+                title: 'Password reset successfully!',
+                confirmButtonColor: '#2563EB'
+            });
             setTimeout(() => navigate("/auth/login"), 2000);
         } catch (err: any) {
+            const errorMsg = err.response?.data?.message || "Failed to reset password. Token may be expired.";
             setMessage({
                 type: 'error',
-                text: err.response?.data?.message || "Failed to reset password. Token may be expired."
+                text: errorMsg
+            });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                icon: 'error',
+                title: errorMsg
             });
         } finally {
             setIsLoading(false);
@@ -71,11 +92,11 @@ export default function ResetPassword() {
         <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center mb-6">
-                    <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-sm">E E</span>
+                    <div className="h-14 w-14 bg-white rounded-lg flex items-center justify-center shadow-md border border-gray-100 overflow-hidden p-1">
+                        <img src={logo} alt="BursarHub" className="w-full h-full object-contain" />
                     </div>
                 </div>
-                <h2 className="mt-2 text-center text-3xl font-extrabold text-text">
+                <h2 className="mt-2 text-center text-3xl font-extrabold text-black">
                     Set new password
                 </h2>
             </div>
@@ -84,7 +105,7 @@ export default function ResetPassword() {
                 <Card className="py-8 px-4 sm:px-10">
                     <form className="space-y-6" onSubmit={submit}>
                         {message && (
-                            <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                            <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-zinc-50 border border-primary text-black' : 'bg-red-50 text-red-700'}`}>
                                 <p className="text-sm font-medium">{message.text}</p>
                             </div>
                         )}

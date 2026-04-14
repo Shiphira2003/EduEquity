@@ -4,7 +4,9 @@ import { forgotPassword } from "../api/auth.api";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Mail, ArrowLeft } from "lucide-react";
+import logo from "../images/logo.png";
 import { Card } from "../components/Card";
+import Swal from "sweetalert2";
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
@@ -18,14 +20,33 @@ export default function ForgotPassword() {
 
         try {
             await forgotPassword(email);
+            const successMsg = "If an account exists with that email, we've sent a password reset link.";
             setMessage({
                 type: 'success',
-                text: "If an account exists with that email, we've sent a password reset link."
+                text: successMsg
+            });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                icon: 'success',
+                title: "Email Sent",
+                text: successMsg
             });
         } catch (err: any) {
+            const errorMsg = err.response?.data?.message || "An error occurred. Please try again.";
             setMessage({
                 type: 'error',
-                text: err.response?.data?.message || "An error occurred. Please try again."
+                text: errorMsg
+            });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                icon: 'error',
+                title: errorMsg
             });
         } finally {
             setIsLoading(false);
@@ -36,11 +57,11 @@ export default function ForgotPassword() {
         <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="flex justify-center mb-6">
-                    <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-sm">E E</span>
+                    <div className="h-14 w-14 bg-white rounded-lg flex items-center justify-center shadow-md border border-gray-100 overflow-hidden p-1">
+                        <img src={logo} alt="BursarHub" className="w-full h-full object-contain" />
                     </div>
                 </div>
-                <h2 className="mt-2 text-center text-3xl font-extrabold text-text">
+                <h2 className="mt-2 text-center text-3xl font-extrabold text-black">
                     Reset your password
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
@@ -52,7 +73,7 @@ export default function ForgotPassword() {
                 <Card className="py-8 px-4 sm:px-10">
                     <form className="space-y-6" onSubmit={submit}>
                         {message && (
-                            <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                            <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-zinc-50 border border-primary text-black' : 'bg-red-50 text-red-700'}`}>
                                 <p className="text-sm font-medium">{message.text}</p>
                             </div>
                         )}

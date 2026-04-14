@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
                     </div>
                     <div className="mt-4 md:mt-0">
                         <p className="text-center text-sm text-gray-400">
-                            &copy; {currentYear} Constituency Bursary System. All rights reserved.
+                            &copy; {currentYear} BursarHub. All rights reserved.
                         </p>
                     </div>
                 </div>

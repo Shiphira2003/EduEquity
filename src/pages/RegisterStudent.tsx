@@ -6,7 +6,7 @@ import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
-import { API_CONFIG } from "../constants";
+import { kenyaData } from "../data/kenya";
 import {
     User,
     Mail,
@@ -15,10 +15,13 @@ import {
     Building2,
     BookOpen,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    Landmark
 } from "lucide-react";
 import axios from "axios";
+import logo from "../images/logo.png";
 import registerImage from "../images/register-image.jpg";
+import Swal from "sweetalert2";
 
 type StudentForm = {
     email: string;
@@ -26,8 +29,13 @@ type StudentForm = {
     full_name: string;
     national_id: string;
     institution: string;
+    education_level: string;
     course: string;
     year_of_study: number;
+    school_bank_name: string;
+    school_account_number: string;
+    county: string;
+    constituency: string;
 };
 
 export default function RegisterStudent() {
@@ -37,8 +45,13 @@ export default function RegisterStudent() {
         full_name: "",
         national_id: "",
         institution: "",
+        education_level: "TERTIARY",
         course: "",
         year_of_study: 1,
+        school_bank_name: "",
+        school_account_number: "",
+        county: "",
+        constituency: ""
     });
 
     const [loading, setLoading] = useState(false);
@@ -55,8 +68,13 @@ export default function RegisterStudent() {
             [name]:
                 name === "year_of_study"
                     ? Number(value)
-                    : value, // convert year_of_study to number
+                    : value,
         }));
+        
+        // Reset constituency if county changes
+        if (name === "county") {
+            setForm(prev => ({ ...prev, constituency: "" }));
+        }
     };
 
     const submit = async (e: React.FormEvent) => {
@@ -67,25 +85,30 @@ export default function RegisterStudent() {
         try {
             const response = await registerStudent(form);
 
-            // Store the JWT token if returned
-            if (response.token) {
-                localStorage.setItem(API_CONFIG.TOKEN_KEY, response.token);
-            }
+            await Swal.fire({
+                title: 'Account Created!',
+                text: response.message || 'Your account has been registered successfully. Please verify your email.',
+                icon: 'success',
+                confirmButtonColor: '#2563EB'
+            });
 
-            // Redirect based on role
-            if (response.user?.role === "ADMIN") {
-                navigate("/admin"); // first user → admin dashboard
-            } else {
-                navigate("/auth/login"); // students → login page
-            }
+            navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
         } catch (err: unknown) {
+            let errorMsg = "Registration failed";
             if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.error || "Registration failed");
+                errorMsg = err.response?.data?.error || "Registration failed";
             } else if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError("Registration failed");
+                errorMsg = err.message;
             }
+            
+            setError(errorMsg);
+            
+            Swal.fire({
+                title: 'Registration Error',
+                text: errorMsg,
+                icon: 'error',
+                confirmButtonColor: '#0052FF'
+            });
         } finally {
             setLoading(false);
         }
@@ -101,7 +124,7 @@ export default function RegisterStudent() {
                     className="hidden lg:block w-1/2 bg-cover bg-center bg-no-repeat relative border-r border-gray-200"
                     style={{ backgroundImage: `url(${registerImage})` }}
                 >
-                    <div className="absolute inset-0 bg-primary/10 mix-blend-multiply" />
+                    <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
                 </div>
 
                 {/* Right Side - Form */}
@@ -109,18 +132,18 @@ export default function RegisterStudent() {
                     <div className="w-full max-w-md space-y-8 animate-fade-in">
                         <div className="text-center lg:text-left">
                             <Link to="/" className="lg:hidden inline-flex items-center gap-2 mb-8">
-                                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                                    <span className="text-white font-bold text-sm">E E</span>
+                                <div className="h-12 w-12 bg-white rounded-xl flex items-center justify-center shadow-md border border-gray-100 overflow-hidden p-1">
+                                    <img src={logo} alt="BursarHub" className="w-full h-full object-contain" />
                                 </div>
                             </Link>
                             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Create Account</h2>
-                            <p className="mt-2 text-gray-600">
-                                Already have an account?{' '}
-                                <Link to="/auth/login" className="font-medium text-primary hover:text-primary-light transition-colors">
-                                    Sign in here
-                                </Link>
-                            </p>
                         </div>
+                        
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium animate-shake">
+                                {String(error)}
+                            </div>
+                        )}
 
                         <form className="space-y-6" onSubmit={submit}>
                             <div className="space-y-5">
@@ -155,39 +178,111 @@ export default function RegisterStudent() {
                                     startIcon={<CreditCard className="w-5 h-5" />}
                                 />
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <Input
-                                        label="Institution"
-                                        name="institution"
-                                        placeholder="University of Nairobi"
-                                        value={form.institution}
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-medium text-gray-700">Education Level</label>
+                                    <select
+                                        name="education_level"
+                                        value={form.education_level}
                                         onChange={handleChange}
+                                        className="block w-full rounded-xl border border-gray-200 shadow-sm py-2.5 px-3 sm:text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200 bg-white"
                                         required
-                                        startIcon={<Building2 className="w-5 h-5" />}
-                                    />
+                                    >
+                                        <option value="PRIMARY">Primary School</option>
+                                        <option value="SECONDARY">Secondary (High School)</option>
+                                        <option value="TERTIARY">Tertiary (College/University)</option>
+                                    </select>
+                                </div>
 
-                                    <Input
-                                        label="Course"
-                                        name="course"
-                                        placeholder="Computer Science"
-                                        value={form.course}
-                                        onChange={handleChange}
-                                        required
-                                        startIcon={<BookOpen className="w-5 h-5" />}
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className={form.education_level === "TERTIARY" ? "" : "md:col-span-2"}>
+                                        <Input
+                                            label="Institution"
+                                            name="institution"
+                                            placeholder={form.education_level === 'TERTIARY' ? "University of Nairobi" : "Prestige Academy"}
+                                            value={form.institution}
+                                            onChange={handleChange}
+                                            required
+                                            startIcon={<Building2 className="w-5 h-5" />}
+                                        />
+                                    </div>
+
+                                    {form.education_level === "TERTIARY" && (
+                                        <Input
+                                            label="Course"
+                                            name="course"
+                                            placeholder="Computer Science"
+                                            value={form.course}
+                                            onChange={handleChange}
+                                            required
+                                            startIcon={<BookOpen className="w-5 h-5" />}
+                                        />
+                                    )}
                                 </div>
 
                                 <Input
-                                    label="Year of Study"
+                                    label={form.education_level === 'PRIMARY' ? 'Grade' : form.education_level === 'SECONDARY' ? 'Form' : 'Year of Study'}
                                     type="number"
                                     name="year_of_study"
                                     min={1}
-                                    max={6}
+                                    max={form.education_level === 'PRIMARY' ? 8 : form.education_level === 'SECONDARY' ? 4 : 6}
                                     value={form.year_of_study}
                                     onChange={handleChange}
                                     required
                                     startIcon={<Calendar className="w-5 h-5" />}
                                 />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+                                    <Input
+                                        label="School Bank Name"
+                                        name="school_bank_name"
+                                        placeholder="e.g. Equity Bank"
+                                        value={form.school_bank_name}
+                                        onChange={handleChange}
+                                        required
+                                        startIcon={<Landmark className="w-5 h-5" />}
+                                    />
+                                    <Input
+                                        label="School Account Number"
+                                        name="school_account_number"
+                                        placeholder="e.g. 1100223344"
+                                        value={form.school_account_number}
+                                        onChange={handleChange}
+                                        required
+                                        startIcon={<CreditCard className="w-5 h-5" />}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+                                    <div className="space-y-1.5 text-left">
+                                        <label className="block text-sm font-medium text-gray-700 text-left">County</label>
+                                        <select
+                                            name="county"
+                                            value={form.county}
+                                            onChange={handleChange}
+                                            className="block w-full rounded-xl border border-gray-200 shadow-sm py-2.5 px-3 sm:text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200 bg-white"
+                                            required
+                                        >
+                                            <option value="">Select County</option>
+                                            {kenyaData.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5 text-left">
+                                        <label className="block text-sm font-medium text-gray-700 text-left">Constituency</label>
+                                        <select
+                                            name="constituency"
+                                            value={form.constituency}
+                                            onChange={handleChange}
+                                            className="block w-full rounded-xl border border-gray-200 shadow-sm py-2.5 px-3 sm:text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200 bg-white"
+                                            disabled={!form.county}
+                                            required
+                                        >
+                                            <option value="">Select Constituency</option>
+                                            {kenyaData.find(c => c.name === form.county)?.constituencies.map(con => (
+                                                <option key={con} value={con}>{con}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <Input
                                     label="Password"
@@ -203,10 +298,10 @@ export default function RegisterStudent() {
                             </div>
 
                             {error && (
-                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg animate-slide-up">
+                                <div className="bg-zinc-50 border-l-4 border-primary p-4 rounded-r-lg animate-slide-up">
                                     <div className="flex">
                                         <div className="ml-3">
-                                            <p className="text-sm text-red-700 font-medium">{error}</p>
+                                            <p className="text-sm text-black font-medium">{error}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -234,15 +329,16 @@ export default function RegisterStudent() {
                                 <Link to="#" className="underline hover:text-primary">Privacy Policy</Link>
                             </p>
 
-                            <div className="text-center mt-6">
-                                <p className="text-sm text-gray-600">
-                                    Already have an account?{' '}
-                                    <Link to="/auth/login" className="font-semibold text-primary hover:text-primary-light hover:underline transition-all">
-                                        Log in here
-                                    </Link>
-                                </p>
-                            </div>
                         </form>
+
+                        <div className="text-center">
+                            <p className="text-sm text-gray-600">
+                                Already have an account?{' '}
+                                <Link to="/auth/login" className="font-semibold text-primary hover:text-primary-light hover:underline transition-all">
+                                    Sign in here
+                                </Link>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

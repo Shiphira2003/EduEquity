@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { login } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Card } from "../components/Card";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import logo from "../images/logo.png";
 import loginImage from "../images/login-image.jpg";
+import Swal from "sweetalert2";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -17,6 +19,8 @@ export default function Login() {
     const { loginUser } = useAuth();
     const navigate = useNavigate();
 
+    const location = useLocation();
+
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -24,12 +28,46 @@ export default function Login() {
 
         try {
             const res = await login(email, password);
-            loginUser(res.token, res.user);
+            loginUser(res.accessToken, res.user);
 
-            if (res.user.role === "ADMIN") navigate("/admin");
-            else navigate("/student");
-        } catch (err) {
-            setError("Invalid email or password");
+            const firstName = res.user?.fullName ? res.user.fullName.split(' ')[0] : 'User';
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                icon: 'success',
+                title: `Welcome back, ${firstName}!`,
+                background: '#ffffff',
+                color: '#09090B',
+                iconColor: '#2563EB',
+                customClass: {
+                    popup: 'rounded-xl border border-zinc-100 shadow-xl'
+                }
+            });
+
+            const isAdmin = res.user.role === "ADMIN" || res.user.role === "SUPER_ADMIN";
+            const redirectTo = location.state?.from || (isAdmin ? "/admin" : "/student");
+            navigate(redirectTo);
+        } catch (err: any) {
+            let errorMsg = "Invalid email or password";
+            
+            // Handle specific 403 Forbidden errors from the backend
+            if (err.response?.status === 403) {
+                errorMsg = err.response.data?.message || "Account not verified or unauthorized.";
+            }
+
+            setError(errorMsg);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                icon: 'error',
+                title: errorMsg
+            });
         } finally {
             setIsLoading(false);
         }
@@ -44,7 +82,7 @@ export default function Login() {
                     className="hidden lg:block w-1/2 bg-cover bg-center bg-no-repeat relative"
                     style={{ backgroundImage: `url(${loginImage})` }}
                 >
-                    <div className="absolute inset-0 bg-primary/10 mix-blend-multiply" />
+                    <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
                 </div>
 
                 {/* Right Side - Form */}
@@ -52,19 +90,13 @@ export default function Login() {
                     <div className="w-full max-w-md space-y-8 animate-fade-in">
                         <div className="text-center lg:text-left mb-8">
                             <div className="flex justify-center lg:justify-start mb-6">
-                                <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-                                    <span className="text-white font-bold text-sm">E E</span>
+                                <div className="h-14 w-14 bg-white rounded-lg flex items-center justify-center shadow-md border border-gray-100 overflow-hidden p-1">
+                                    <img src={logo} alt="BursarHub" className="w-full h-full object-contain" />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-extrabold text-text">
-                                Sign in to your account
+                            <h2 className="text-3xl font-extrabold text-black">
+                                Sign in to BursarHub
                             </h2>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Or{' '}
-                                <Link to="/register-student" className="font-medium text-primary hover:text-primary/80">
-                                    create a new student account
-                                </Link>
-                            </p>
                         </div>
 
                         <Card className="py-8 px-4 sm:px-10 shadow-xl border border-gray-100">
@@ -127,6 +159,15 @@ export default function Login() {
                                     >
                                         Sign in
                                     </Button>
+                                </div>
+
+                                <div className="text-center mt-6">
+                                    <p className="text-sm text-gray-600">
+                                        Don't have an account?{' '}
+                                        <Link to="/register-student" className="font-medium text-primary hover:text-primary/80">
+                                            Create a new student account
+                                        </Link>
+                                    </p>
                                 </div>
                             </form>
                         </Card>

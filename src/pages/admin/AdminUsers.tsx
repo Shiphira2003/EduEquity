@@ -4,16 +4,20 @@ import api from "../../api/axios";
 import { Card } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
+import Swal from "sweetalert2";
+import { useAuth } from "../../context/AuthContext";
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "../../components/Table";
 
 type User = {
     id: number;
     email: string;
     role: string;
-    created_at: string;
+    isActive: boolean;
+    createdAt: string;
 };
 
 export default function AdminUsers() {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,26 +32,52 @@ export default function AdminUsers() {
         }
     };
 
+    const toggleUserStatus = async (user: User) => {
+        const action = user.isActive ? 'deactivate' : 'activate';
+        const confirmResult = await Swal.fire({
+            title: `Confirm ${action}`,
+            text: `Are you sure you want to ${action} ${user.email}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: user.isActive ? '#d33' : '#0052FF',
+            confirmButtonText: `Yes, ${action}`
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
+        try {
+            await api.patch(`/admin/users/${user.id}/status`, { is_active: !user.isActive });
+            Swal.fire('Success', `User has been ${action}d.`, 'success');
+            fetchUsers();
+        } catch (err: any) {
+            Swal.fire('Error', err.response?.data?.error || 'Failed to update user status', 'error');
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
     }, []);
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading users...</div>;
 
+    const isSuper = currentUser?.role?.toUpperCase() === 'SUPER_ADMIN';
+
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">System Users</h1>
+            <h1 className="text-2xl font-bold text-gray-900">System Users Management</h1>
 
-            <div className="mt-4">
-                <Card>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Register New Admin</h2>
-                    <AdminRegisterForm onRegister={fetchUsers} />
-                </Card>
-            </div>
+            {isSuper && (
+                <div className="mt-4">
+                    <Card>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Register New Admin Account</h2>
+                        <AdminRegisterForm onRegister={fetchUsers} />
+                    </Card>
+                </div>
+            )}
 
             <Card noPadding className="overflow-hidden mt-8">
                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">All Accounts</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">All System Accounts</h2>
                 </div>
                 <TableContainer>
                     <TableHead>
@@ -55,7 +85,9 @@ export default function AdminUsers() {
                             <TableHeaderCell>ID</TableHeaderCell>
                             <TableHeaderCell>Email Address</TableHeaderCell>
                             <TableHeaderCell>Role</TableHeaderCell>
+                            <TableHeaderCell>Status</TableHeaderCell>
                             <TableHeaderCell>Created At</TableHeaderCell>
+                            {isSuper && <TableHeaderCell>Actions</TableHeaderCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -65,15 +97,37 @@ export default function AdminUsers() {
                                     <TableCell>{u.id}</TableCell>
                                     <TableCell className="font-medium text-gray-900">{u.email}</TableCell>
                                     <TableCell>
-                                        <Badge variant={u.role === 'ADMIN' ? 'success' : 'neutral'}>
-                                            {u.role}
+                                        <Badge variant={
+                                            u.role?.toUpperCase() === 'SUPER_ADMIN' ? 'info' : 
+                                            u.role?.toUpperCase() === 'ADMIN' ? 'neutral' : 
+                                            'success'
+                                        }>
+                                            {u.role ? u.role.toUpperCase().replace('_', ' ') : 'STUDENT'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{new Date(u.created_at).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={u.isActive ? 'success' : 'error'}>
+                                            {u.isActive ? 'Active' : 'Deactivated'}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                                    {isSuper && (
+                                        <TableCell>
+                                            {u.id !== currentUser?.id && (
+                                                <Button 
+                                                    size="sm" 
+                                                    variant={u.isActive ? "danger" : "primary"}
+                                                    onClick={() => toggleUserStatus(u)}
+                                                >
+                                                    {u.isActive ? 'Discontinue' : 'Reactivate'}
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         ) : (
-                            <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-500">No users found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={isSuper ? 6 : 5} className="text-center py-8 text-gray-500">No matching accounts found.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </TableContainer>
@@ -89,13 +143,38 @@ function AdminRegisterForm({ onRegister }: { onRegister: () => void }) {
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const confirmResult = await Swal.fire({
+            title: 'Confirm Admin Creation',
+            text: `Are you sure you want to register ${email} as an Administrator?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0052FF',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, create admin'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
         try {
             await registerAdmin({ full_name, email, password });
-            alert("Admin registered successfully");
+            
+            Swal.fire({
+                title: 'Success!',
+                text: 'Admin registered successfully',
+                icon: 'success',
+                confirmButtonColor: '#0052FF'
+            });
+
             setFullName(""); setEmail(""); setPassword("");
             onRegister();
-        } catch (err) {
-            alert("Failed to register admin");
+        } catch (err: any) {
+            Swal.fire({
+                title: 'Error!',
+                text: err.response?.data?.message || err.message || 'Failed to register admin',
+                icon: 'error',
+                confirmButtonColor: '#0052FF'
+            });
         }
     };
 

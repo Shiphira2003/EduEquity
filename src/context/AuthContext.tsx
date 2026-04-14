@@ -6,7 +6,10 @@ import { API_CONFIG } from "../constants";
 export type User = {
     id: number;
     email: string;
-    role: "ADMIN" | "STUDENT" | "COMMITTEE";
+    role: "ADMIN" | "STUDENT" | "COMMITTEE" | "SUPER_ADMIN";
+    fullName?: string;
+    avatar?: string;
+    systemId?: string;
 };
 
 type AuthContextType = {

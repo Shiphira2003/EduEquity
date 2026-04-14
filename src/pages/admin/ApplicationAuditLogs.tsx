@@ -9,6 +9,7 @@ type AuditLog = {
     id: number;
     user_id: number;
     admin_email: string;
+    system_id: string | null;
     action: string;
     old_value: Record<string, any> | null;
     new_value: Record<string, any> | null;
@@ -66,8 +67,8 @@ const ApplicationAuditLogs = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-medium">Loading audit trail...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-zinc-500 font-medium">Loading audit trail...</p>
                 </div>
             </div>
         );
@@ -87,9 +88,9 @@ const ApplicationAuditLogs = () => {
                         </svg>
                         Back to Dashboard
                     </button>
-                    <h1 className="text-2xl font-bold text-text tracking-tight">Audit Trail</h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Viewing history for Application <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">#{id}</span>
+                    <h1 className="text-2xl font-bold text-black tracking-tight">Audit Trail</h1>
+                    <p className="mt-1 text-sm text-zinc-500">
+                        Viewing history for Application <span className="font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-md">#{id}</span>
                     </p>
                 </div>
             </div>
@@ -114,8 +115,7 @@ const ApplicationAuditLogs = () => {
                             <TableRow>
                                 <TableHeaderCell>Action</TableHeaderCell>
                                 <TableHeaderCell>Administrator</TableHeaderCell>
-                                <TableHeaderCell className="w-1/4">Old Value</TableHeaderCell>
-                                <TableHeaderCell className="w-1/4">New Value</TableHeaderCell>
+                                <TableHeaderCell className="w-1/2">Progress Status</TableHeaderCell>
                                 <TableHeaderCell>Timestamp</TableHeaderCell>
                             </TableRow>
                         </TableHead>
@@ -133,14 +133,14 @@ const ApplicationAuditLogs = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center">
-                                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs mr-3">
-                                                {log.admin_email[0].toUpperCase()}
+                                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-[10px] mr-3 border border-blue-200">
+                                                {log.system_id ? log.system_id.split('-')[0][0] + (log.system_id.split('-')[1] || '') : 'S'}
                                             </div>
-                                            <span className="text-sm font-medium text-gray-900">{log.admin_email}</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-blue-700">{log.system_id || 'SYSTEM'}</span>
+                                                <span className="text-xs text-gray-500">{log.admin_email}</span>
+                                            </div>
                                         </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <ChangeValueDisplay value={log.old_value} />
                                     </TableCell>
                                     <TableCell>
                                         <ChangeValueDisplay value={log.new_value} />
