@@ -32,6 +32,9 @@ export default function AdminApplications() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<string>("");
+    const [bursaryType, setBursaryType] = useState<string>("");
+    const [sortField, setSortField] = useState<string>("created_at");
+    const [sortOrder, setSortOrder] = useState<string>("desc");
     const [page, setPage] = useState(1);
     const limit = 10;
     const [editApp, setEditApp] = useState<Application | null>(null);
@@ -45,9 +48,9 @@ export default function AdminApplications() {
     };
 
     const { data: response } = useQuery({
-        queryKey: ['adminApplications', statusFilter, page],
+        queryKey: ['adminApplications', statusFilter, bursaryType, sortField, sortOrder, page],
         queryFn: async () => {
-             const res = await getApplications(statusFilter, page, limit);
+             const res = await getApplications(statusFilter, page, limit, sortField, sortOrder, bursaryType);
              if (!res || !res.data) return { data: [], totalPages: 0 };
              return {
                  data: res.data.map((app: any) => ({
@@ -336,19 +339,58 @@ export default function AdminApplications() {
             )}
 
             <Card noPadding className="overflow-hidden">
-                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Filter Status:</label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border border-gray-300 rounded-md text-sm p-1"
-                        >
-                            <option value="">All Applications</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="APPROVED">Approved</option>
-                            <option value="REJECTED">Rejected</option>
-                        </select>
+                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50/50">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                                className="border-0 bg-white shadow-sm rounded-md text-sm p-1 px-2 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
+                            <select
+                                value={bursaryType}
+                                onChange={(e) => { setBursaryType(e.target.value); setPage(1); }}
+                                className="border-0 bg-white shadow-sm rounded-md text-sm p-1 px-2 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Types</option>
+                                <option value="MCA">MCA</option>
+                                <option value="CDF">CDF</option>
+                                <option value="COUNTY">County</option>
+                                <option value="NATIONAL">National</option>
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort</label>
+                            <select
+                                value={sortField}
+                                onChange={(e) => { setSortField(e.target.value); setPage(1); }}
+                                className="border-0 bg-white shadow-sm rounded-md text-sm p-1 px-2 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="created_at">Date Applied</option>
+                                <option value="need_score">Need Score</option>
+                                <option value="amount_requested">Amount</option>
+                                <option value="taada_flag">Priority Tier</option>
+                            </select>
+                            <select
+                                value={sortOrder}
+                                onChange={(e) => { setSortOrder(e.target.value); setPage(1); }}
+                                className="border-0 bg-white shadow-sm rounded-md text-sm p-1 px-2 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="desc">Desc</option>
+                                <option value="asc">Asc</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <Button 

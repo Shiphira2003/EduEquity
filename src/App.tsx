@@ -1,5 +1,4 @@
 import RegisterStudent from "./pages/RegisterStudent";
-import VerifyEmail from "./pages/VerifyEmail";
 import LandingPage from "./pages/LandingPage";
 import { Route, Routes } from "react-router-dom";
 import Login from "./pages/Login.tsx";
@@ -17,6 +16,7 @@ import AdminAuditLogs from "./pages/admin/AdminAuditLogs.tsx";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements.tsx";
 import AdminFundSources from "./pages/admin/AdminFundSources.tsx";
 import AdminRanking from "./pages/admin/AdminRanking.tsx";
+import AdminReports from "./pages/admin/AdminReports.tsx";
 import StudentLayout from "./layouts/StudentLayout";
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./routes/ProtectedRoutes";
@@ -41,7 +41,6 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/public-ledger" element={<PublicLedger />} />
             <Route path="/register-student" element={<RegisterStudent />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -66,6 +65,7 @@ function App() {
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
                 <Route path="announcements" element={<AdminAnnouncements />} />
                 <Route path="fund-sources" element={<AdminFundSources />} />
+                <Route path="reports" element={<AdminReports />} />
                 <Route
                     path="applications/:id/audit-logs"
                     element={<ApplicationAuditLogs />}

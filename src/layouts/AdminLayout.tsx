@@ -17,7 +17,8 @@ import {
     Settings,
     GraduationCap,
     Award,
-    X
+    X,
+    BarChart4
 } from 'lucide-react';
 import logo from '../images/logo.png';
 
@@ -52,6 +53,7 @@ const AdminLayout: React.FC = () => {
         { to: '/admin/disbursements', icon: <Banknote size={20} />, label: 'Disbursements' },
         { to: '/admin/fund-sources', icon: <Settings size={20} />, label: 'Fund Cycles' },
         { to: '/admin/audit-logs', icon: <ClipboardList size={20} />, label: 'Audit Logs' },
+        { to: '/admin/reports', icon: <BarChart4 size={20} />, label: 'Financial Reports' },
         { to: '/admin/announcements', icon: <Bell size={20} />, label: 'Announcements' },
         { to: '/admin/profile', icon: <UserCircle size={20} />, label: 'My Profile' },
     ].filter(item => !item.superOnly || user?.role === 'SUPER_ADMIN');

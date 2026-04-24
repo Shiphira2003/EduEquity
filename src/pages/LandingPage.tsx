@@ -128,7 +128,7 @@ const LandingPage: React.FC = () => {
 
             {/* Hero Section - 50/50 Split for High Contrast Visibility */}
             <div className="bg-white overflow-hidden border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 lg:pt-12 lg:pb-32">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         <div className="lg:w-1/2 text-center lg:text-left space-y-8 animate-fade-in">
                             <button onClick={handleShowOpenApplications} className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-sm font-semibold text-primary border border-blue-100 hover:bg-blue-100 transition-all group">
@@ -150,17 +150,32 @@ const LandingPage: React.FC = () => {
                                 )}
                             </div>
                             
-                            <div className="pt-8 flex items-center justify-center lg:justify-start gap-10 text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
-                                <div className="flex items-center gap-2"><span>Fast Process</span></div>
-                                <div className="flex items-center gap-2"><span>•</span><span>Secure Data</span></div>
-                                <div className="flex items-center gap-2"><span>•</span><span>Direct Deposits</span></div>
+                            
+                            <div className="pt-8 flex items-center justify-center lg:justify-start gap-10 text-[10px] text-zinc-400 font-bold uppercase tracking-widest hidden lg:flex">
+                                {/* Placeholders removed from here, moving to carousel column */}
                             </div>
                         </div>
 
-                        <div className="lg:w-1/2 flex justify-center relative">
+                        <div className="lg:w-1/2 flex flex-col items-center relative">
                             <div className="absolute inset-0 bg-primary/5 rounded-[3rem] -rotate-3 transform scale-105" />
                             <div className="relative w-full max-w-md">
                                 <Carousel />
+                            </div>
+                            
+                            {/* Trust Tags moved under carousel */}
+                            <div className="relative mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-[10px] text-zinc-500 font-extrabold uppercase tracking-[0.2em] animate-fade-in">
+                                <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-50">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+                                    <span>Fast Process</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-50">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                                    <span>Secure Data</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
+                                    <span>Direct Deposits</span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -100,8 +100,12 @@ export default function AdminRanking() {
                         <span className="text-xs font-bold text-gray-400 uppercase">Year</span>
                         <input 
                             type="number" 
-                            value={cycleYear} 
-                            onChange={(e) => setCycleYear(parseInt(e.target.value))}
+                            value={cycleYear || ''} 
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val)) setCycleYear(val);
+                                else setCycleYear(0); // Fallback to 0 which backend validates correctly or defaults
+                            }}
                             className="w-20 border-0 focus:ring-0 text-sm font-semibold p-0"
                         />
                     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import Swal from 'sweetalert2';
 import { Card } from '../../components/Card';
-import { Plus, Power, Banknote, PieChart, TrendingUp, Info } from 'lucide-react';
+import { Plus, Power, Banknote, PieChart, TrendingUp, Info, Edit3, Trash2 } from 'lucide-react';
 import { Button } from '../../components/Button';
 
 interface FundSource {
@@ -124,6 +124,57 @@ const AdminFundSources = () => {
             fetchFundSources();
         } catch (err: any) {
             Swal.fire('Error', err.response?.data?.message || 'Failed to update cycle state', 'error');
+        }
+    };
+
+    const handleEditBudget = async (source: FundSource) => {
+        const { value: newBudget } = await Swal.fire({
+            title: `Update Budget for ${source.name}`,
+            input: 'number',
+            inputLabel: 'Budget Amount (KES)',
+            inputValue: source.budget_per_cycle,
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            inputValidator: (value) => {
+                if (!value || isNaN(parseFloat(value))) {
+                    return 'You must enter a valid number';
+                }
+                return null;
+            }
+        });
+
+        if (newBudget) {
+            try {
+                await api.put(`/fund-sources/config/${source.id}`, {
+                    budget_per_cycle: parseFloat(newBudget)
+                });
+                Swal.fire('Updated!', 'The budget has been adjusted.', 'success');
+                fetchFundSources();
+            } catch (err: any) {
+                Swal.fire('Error', err.response?.data?.message || 'Failed to update budget.', 'error');
+            }
+        }
+    };
+
+    const handleDeleteSource = async (source: FundSource) => {
+        const confirmResult = await Swal.fire({
+            title: 'Delete Fund Source?',
+            text: `This will remove ${source.name} (${source.cycle_year}). This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Yes, delete it'
+        });
+
+        if (confirmResult.isConfirmed) {
+            try {
+                await api.delete(`/fund-sources/config/${source.id}`);
+                Swal.fire('Deleted!', 'The fund source has been removed.', 'success');
+                fetchFundSources();
+            } catch (err: any) {
+                Swal.fire('Error', err.response?.data?.message || 'Failed to delete fund source.', 'error');
+            }
         }
     };
 
@@ -281,8 +332,27 @@ const AdminFundSources = () => {
                     </div>
                     <h2 className="text-2xl font-bold text-black mb-2">No Fund Sources Found</h2>
                     <p className="text-zinc-500 mb-8 max-w-sm mx-auto font-medium">Create your first fund source for {cycleYear} to begin the bursary allocation cycle.</p>
-                    <Button onClick={handleCreateSource} className="px-8 py-3 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20">
-                        Initialize Cycle
+                    <Button onClick={async () => {
+                        const confirmResult = await Swal.fire({
+                            title: 'Initialize Fund Cycle?',
+                            text: `This will create standard budget records (National, CDF, MCA, and County) for the ${cycleYear} cycle.`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#2563EB',
+                            confirmButtonText: 'Yes, Initialize'
+                        });
+
+                        if (confirmResult.isConfirmed) {
+                            try {
+                                await api.post('/fund-sources/initialize', { cycle_year: cycleYear });
+                                Swal.fire('Initialized!', `The ${cycleYear} funding cycle is ready.`, 'success');
+                                fetchFundSources();
+                            } catch (err: any) {
+                                Swal.fire('Error', err.response?.data?.message || 'Failed to initialize cycle.', 'error');
+                            }
+                        }
+                    }} className="px-8 py-3 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20">
+                        Initialize {cycleYear} Cycle
                     </Button>
                 </div>
             ) : (
@@ -307,12 +377,30 @@ const AdminFundSources = () => {
                                                 </span>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleToggleOpen(source)}
-                                            className={`p-4 rounded-2xl shadow-lg transition-all text-white transform hover:-translate-y-1 active:scale-95 ${source.is_open ? 'bg-zinc-900 shadow-zinc-200' : 'bg-primary shadow-primary/20'}`}
-                                        >
-                                            <Power className="h-5 w-5" strokeWidth={3} />
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleToggleOpen(source)}
+                                                className={`p-4 rounded-2xl shadow-lg transition-all text-white transform hover:-translate-y-1 active:scale-95 ${source.is_open ? 'bg-zinc-900 shadow-zinc-200' : 'bg-primary shadow-primary/20'}`}
+                                            >
+                                                <Power className="h-5 w-5" strokeWidth={3} />
+                                            </button>
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={() => handleEditBudget(source)}
+                                                    className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-primary hover:border-primary/20 transition-all"
+                                                    title="Edit Budget"
+                                                >
+                                                    <Edit3 className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteSource(source)}
+                                                    className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-red-500 hover:border-red-200 transition-all"
+                                                    title="Delete Source"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Dashboard Metrics */}

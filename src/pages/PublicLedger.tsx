@@ -59,9 +59,30 @@ const PublicLedger: React.FC = () => {
                         <ShieldCheck className="h-8 w-8 text-primary" />
                     </div>
                     <h1 className="text-4xl font-extrabold text-black mb-4 tracking-tight">Public Transparency Ledger</h1>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10">
                         Track every disbursed bursary in real-time. We believe in full transparency, zero hidden payments, and complete accountability.
                     </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-2xl text-white shadow-xl shadow-zinc-200">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Total Disbursed</p>
+                            <h3 className="text-3xl font-black">
+                                {formatCurrency(entries.reduce((acc, curr) => acc + Number(curr.amount), 0).toString())}
+                            </h3>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-xl shadow-zinc-100">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Students Funded</p>
+                            <h3 className="text-3xl font-black text-zinc-900">
+                                {entries.length.toLocaleString()}
+                            </h3>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-xl shadow-zinc-100">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Active Cycles</p>
+                            <h3 className="text-3xl font-black text-zinc-900">
+                                {[...new Set(entries.map(e => e.cycle_year))].length}
+                            </h3>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters & Search */}

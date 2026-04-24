@@ -90,7 +90,12 @@ const Profile: React.FC = () => {
                 school_bank_name: profile.school_bank_name,
                 school_account_number: profile.school_account_number,
                 county: profile.county,
-                constituency: profile.constituency
+                constituency: profile.constituency,
+                familyIncome: profile.familyIncome,
+                dependents: profile.dependents,
+                orphaned: profile.orphaned,
+                disabled: profile.disabled,
+                academicScore: profile.academicScore
             };
             if (profile.isNew) {
                 payload.national_id = profile.national_id;
@@ -240,6 +245,32 @@ const Profile: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="md:col-span-2 mt-4 border-t border-zinc-100 pt-6">
+                            <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-4">Socioeconomic Assessment</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Family Income</p>
+                                    <p className="text-sm font-bold text-gray-900">KES {profile.familyIncome?.toLocaleString() || '0'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Dependents</p>
+                                    <p className="text-sm font-bold text-gray-900">{profile.dependents || '0'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Academic Score</p>
+                                    <p className="text-sm font-bold text-gray-900">{profile.academicScore || '0'}%</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Priority Tags</p>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {profile.orphaned && <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-bold rounded">ORPHAN</span>}
+                                        {profile.disabled && <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-bold rounded">DISABLED</span>}
+                                        {!profile.orphaned && !profile.disabled && <span className="text-[10px] text-gray-400">None</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
@@ -366,6 +397,57 @@ const Profile: React.FC = () => {
                                                 <option key={con} value={con}>{con}</option>
                                             ))}
                                         </select>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-gray-100">
+                                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Socioeconomic Assessment</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <Input
+                                            label="Annual Family Income (KES)"
+                                            type="number"
+                                            name="familyIncome"
+                                            value={profile.familyIncome || 0}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <Input
+                                            label="Number of Dependents"
+                                            type="number"
+                                            name="dependents"
+                                            value={profile.dependents || 0}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <Input
+                                            label="Current Academic Score (%)"
+                                            type="number"
+                                            max={100}
+                                            name="academicScore"
+                                            value={profile.academicScore || 0}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <div className="flex gap-6 pt-6">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!profile.orphaned}
+                                                    onChange={(e) => setProfile({ ...profile, orphaned: e.target.checked })}
+                                                    className="w-4 h-4 rounded text-primary focus:ring-primary"
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">Orphaned</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!profile.disabled}
+                                                    onChange={(e) => setProfile({ ...profile, disabled: e.target.checked })}
+                                                    className="w-4 h-4 rounded text-primary focus:ring-primary"
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">Disabled</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 

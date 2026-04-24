@@ -83,10 +83,20 @@ export interface AdminAnalytics {
 export const getApplications = async (
     status?: string,
     page = 1,
-    limit = 10
+    limit = 10,
+    sortField = 'created_at',
+    sortOrder = 'desc',
+    bursaryType?: string
 ): Promise<{ data: Application[]; totalPages: number; total: number }> => {
     const res = await api.get("/applications", {
-        params: { status: status || undefined, page, limit },
+        params: { 
+            status: status || undefined, 
+            page, 
+            limit, 
+            sortField, 
+            sortOrder, 
+            bursaryType: bursaryType || undefined 
+        },
     });
     return res.data;
 };
@@ -116,8 +126,11 @@ export const autoEvaluateApplications = async (cycle_year: number) => {
 };
 
 export const getRankedApplications = async (cycle_year: number, bursary_type?: string): Promise<ApplicationRanking[]> => {
-    const res = await api.get("/applications/ranking", { params: { cycle_year, bursary_type } });
-    return res.data;
+    const url = bursary_type 
+        ? `/ranking/cycle/${cycle_year}/${bursary_type}`
+        : `/ranking/cycle/${cycle_year}`;
+    const res = await api.get(url);
+    return res.data.data.rankings; // Based on successResponse structure in ranking.ts
 };
 
 export const getScoreBreakdown = async (applicationId: number): Promise<ScoreBreakdown> => {
@@ -216,3 +229,8 @@ export const deleteDisbursement = async (id: number) => {
     const res = await api.delete(`/admin/disbursements/${id}`);
     return res.data;
 };
+
+// ─────────────────────────────────────────────
+// Note: Financial and Reporting functions have been 
+// moved to specialized reports.api.ts
+// ─────────────────────────────────────────────

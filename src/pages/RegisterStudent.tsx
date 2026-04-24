@@ -1,5 +1,6 @@
 // src/pages/RegisterStudent.tsx
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { registerStudent } from "../api/student.api";
 import { Input } from "../components/Input";
@@ -56,6 +57,7 @@ export default function RegisterStudent() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { loginUser } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (
@@ -84,15 +86,21 @@ export default function RegisterStudent() {
 
         try {
             const response = await registerStudent(form);
+            
+            // Seamless login
+            if (response.accessToken && response.user) {
+                loginUser(response.accessToken, response.user);
+            }
 
             await Swal.fire({
-                title: 'Account Created!',
-                text: response.message || 'Your account has been registered successfully. Please verify your email.',
+                title: 'Welcome to BursarHub!',
+                text: response.message || 'Your account has been registered successfully.',
                 icon: 'success',
                 confirmButtonColor: '#2563EB'
             });
 
-            navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
+            const isAdmin = response.user?.role === "ADMIN" || response.user?.role === "SUPER_ADMIN";
+            navigate(isAdmin ? "/admin" : "/student/dashboard");
         } catch (err: unknown) {
             let errorMsg = "Registration failed";
             if (axios.isAxiosError(err)) {

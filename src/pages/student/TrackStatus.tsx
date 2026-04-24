@@ -384,7 +384,7 @@ const TrackStatus: React.FC = () => {
 
                             <div className="mt-8 pt-6 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-blue-400">
                                 <p>Next Update in 30 Seconds</p>
-                                <Link to="/ledger" className="hover:text-white transition-colors">View Anonymous Ranking Ledger &rarr;</Link>
+                                <Link to="/public-ledger" className="hover:text-white transition-colors">View Anonymous Ranking Ledger &rarr;</Link>
                             </div>
                         </div>
                     )}

@@ -11,7 +11,9 @@ import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
-import { Edit2, Trash2, Banknote, Search, Calendar, Hash } from 'lucide-react';
+import { Edit2, Trash2, Banknote, Search, Calendar, Hash, AlertCircle, TrendingDown } from 'lucide-react';
+import { getApplications } from '../../api/admin.api';
+import { getCashFlowSummary } from '../../api/reports.api';
 import Swal from 'sweetalert2';
 
 export default function AdminDisbursements() {
@@ -26,21 +28,50 @@ export default function AdminDisbursements() {
         reference_number: '',
         fund_source: 'NATIONAL'
     });
+    const [approvedApps, setApprovedApps] = useState<any[]>([]);
+    const [balances, setBalances] = useState<any[]>([]);
+    const [loadingContext, setLoadingContext] = useState(false);
 
     const { data: disbursements = [], isLoading } = useQuery({
         queryKey: ['adminDisbursements'],
         queryFn: getDisbursements
     });
 
+    const currentYear = new Date().getFullYear();
+
+    // Fetch context data for the modal
+    const fetchModalContext = async () => {
+        setLoadingContext(true);
+        try {
+            const [appsRes, balanceRes] = await Promise.all([
+                getApplications('APPROVED', 1, 100),
+                getCashFlowSummary(currentYear)
+            ]);
+            setApprovedApps(appsRes.data);
+            setBalances(balanceRes.balances);
+        } catch (err) {
+            console.error("Failed to fetch modal context", err);
+        } finally {
+            setLoadingContext(false);
+        }
+    };
+
     const createMutation = useMutation({
         mutationFn: (data: any) => createDisbursement(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['adminDisbursements'] });
             setShowModal(false);
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Disbursement created', timer: 3000, showConfirmButton: false });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: 'Disbursement recorded successfully'
+            });
         },
         onError: (err: any) => {
-            Swal.fire('Error', err.response?.data?.message || 'Failed to create record. Check Application ID.', 'error');
+            Swal.fire('Error', err.response?.data?.message || err.message || 'Failed to record disbursement', 'error');
         }
     });
 
@@ -52,7 +83,7 @@ export default function AdminDisbursements() {
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Disbursement updated', timer: 3000, showConfirmButton: false });
         },
         onError: (err: any) => {
-            Swal.fire('Error', err.response?.data?.message || 'Failed to update record', 'error');
+            Swal.fire('Error', err.response?.data?.message || err.message || 'Failed to update record', 'error');
         }
     });
 
@@ -61,12 +92,16 @@ export default function AdminDisbursements() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['adminDisbursements'] });
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Record deleted', timer: 3000, showConfirmButton: false });
+        },
+        onError: (err: any) => {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to delete record', 'error');
         }
     });
 
     const openAdd = () => {
         setEditMode(false);
         setFormData({ id: 0, allocation_id: 0, amount: 0, status: 'PENDING', reference_number: '', fund_source: 'NATIONAL' });
+        fetchModalContext();
         setShowModal(true);
     };
 
@@ -123,11 +158,46 @@ export default function AdminDisbursements() {
                         
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {!editMode && (
-                                <div>
-                                    <label className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase mb-1.5">
-                                        <Search size={12} /> Application ID
-                                    </label>
-                                    <input required type="number" className="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="e.g. 102" value={formData.allocation_id || ''} onChange={e => setFormData({ ...formData, allocation_id: parseInt(e.target.value) })} />
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                            <Search size={12} /> Select Approved Application
+                                        </label>
+                                        <select 
+                                            required 
+                                            className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={formData.allocation_id || ''}
+                                            onChange={e => {
+                                                const app = approvedApps.find(a => a.id === parseInt(e.target.value));
+                                                if (app) {
+                                                    setFormData({ 
+                                                        ...formData, 
+                                                        allocation_id: app.id, 
+                                                        amount: parseFloat(app.amount_allocated) 
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <option value="">-- Choose student application --</option>
+                                            {approvedApps.map(app => (
+                                                <option key={app.id} value={app.id}>
+                                                    {app.full_name} (#{app.id}) - KES {parseFloat(app.amount_allocated).toLocaleString()}
+                                                </option>
+                                            ))}
+                                            {loadingContext && <option disabled>Loading applications...</option>}
+                                            {!loadingContext && approvedApps.length === 0 && <option disabled>No approved applications found</option>}
+                                        </select>
+                                    </div>
+
+                                    {formData.allocation_id ? (
+                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-start gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-lg"><AlertCircle size={16} className="text-primary" /></div>
+                                            <div>
+                                                <p className="text-xs font-bold text-black">Target Amount: KES {formData.amount?.toLocaleString()}</p>
+                                                <p className="text-[10px] text-zinc-500">Auto-calculated based on the approved bursary allocation.</p>
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                             )}
                             
@@ -156,17 +226,49 @@ export default function AdminDisbursements() {
                                 <input type="text" className="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. TRX-9031204" value={formData.reference_number || ''} onChange={e => setFormData({ ...formData, reference_number: e.target.value })} />
                             </div>
 
-                            <div>
-                                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase mb-1.5">
-                                    Fund Source
-                                </label>
-                                <select className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fund_source} onChange={e => setFormData({ ...formData, fund_source: e.target.value })}>
-                                    <option value="NATIONAL">NATIONAL</option>
-                                    <option value="COUNTY">COUNTY</option>
-                                    <option value="CDF">CDF</option>
-                                    <option value="MCA">MCA</option>
-                                </select>
-                                <p className="text-[10px] text-gray-400 mt-1 italic">* Defaults to Application's source if left empty on creation.</p>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                        Fund Source
+                                    </label>
+                                    <select className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fund_source} onChange={e => setFormData({ ...formData, fund_source: e.target.value })}>
+                                        <option value="NATIONAL">NATIONAL</option>
+                                        <option value="COUNTY">COUNTY</option>
+                                        <option value="CDF">CDF</option>
+                                        <option value="MCA">MCA</option>
+                                    </select>
+                                </div>
+
+                                {formData.fund_source && balances.length > 0 && (
+                                    <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
+                                                <TrendingDown size={12} /> {formData.fund_source} Budget Pulse
+                                            </div>
+                                            <span className="text-[10px] font-bold text-zinc-400">{currentYear} Cycle</span>
+                                        </div>
+                                        {(() => {
+                                            const sourceBalance = balances.find(b => b.fundSource === formData.fund_source);
+                                            if (!sourceBalance) return <p className="text-xs text-zinc-500">No budget data available.</p>;
+                                            const isOverCap = (formData.amount || 0) > sourceBalance.availableBalance;
+                                            return (
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs font-medium text-zinc-600">Available:</span>
+                                                        <span className={`text-sm font-black ${isOverCap ? 'text-red-600' : 'text-zinc-900'}`}>
+                                                            KES {sourceBalance.availableBalance.toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    {isOverCap && (
+                                                        <p className="text-[10px] text-red-500 font-bold flex items-center gap-1 mt-1">
+                                                            <AlertCircle size={10} /> Warning: Amount exceeds available balance!
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">

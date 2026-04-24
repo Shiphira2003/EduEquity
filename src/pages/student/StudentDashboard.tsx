@@ -173,10 +173,26 @@ const StudentDashboard: React.FC = () => {
                                     {latestApp ? `${latestApp.financial_year || 'Current'} Application` : 'No Active Application'}
                                 </h3>
                                 
-                                {latestApp?.status === 'PENDING' && latestRank !== null && (
-                                    <div className="flex items-center gap-2 mb-3 bg-blue-50 w-fit px-3 py-1 rounded-lg border border-blue-100">
-                                        <Target size={14} className="text-blue-600" />
-                                        <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Live Rank: #{latestRank}</span>
+                                {latestApp?.status === 'PENDING' && (
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                                        {latestRank !== null && (
+                                            <div className="flex items-center gap-2 bg-blue-50 w-fit px-3 py-1 rounded-lg border border-blue-100">
+                                                <Target size={14} className="text-blue-600" />
+                                                <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Live Rank: #{latestRank}</span>
+                                            </div>
+                                        )}
+                                        {latestApp.need_score && (
+                                            <div className="flex items-center gap-2 bg-emerald-50 w-fit px-3 py-1 rounded-lg border border-emerald-100">
+                                                <Target size={14} className="text-emerald-600" />
+                                                <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Need Score: {latestApp.need_score}/100</span>
+                                            </div>
+                                        )}
+                                        {latestApp.taada_flag && (
+                                            <div className="flex items-center gap-2 bg-amber-50 w-fit px-3 py-1 rounded-lg border border-amber-100">
+                                                <AlertCircle size={14} className="text-amber-600" />
+                                                <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Priority: {latestApp.taada_flag.replace('_', ' ')}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

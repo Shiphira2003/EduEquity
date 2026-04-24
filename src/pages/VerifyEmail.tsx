@@ -6,7 +6,6 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/Button";
 import Swal from "sweetalert2";
-import { API_CONFIG } from "../constants";
 
 export default function VerifyEmail() {
     const [searchParams] = useSearchParams();

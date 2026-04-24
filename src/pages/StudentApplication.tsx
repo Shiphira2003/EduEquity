@@ -24,6 +24,10 @@ const applicationSchema = z.object({
     constituency: z.string().optional(),
     cycleYear: z.number().min(2020),
     feeBalance: z.number().min(1, "Fee balance must be greater than 0"),
+    institution: z.string().min(1, "Institution is required"),
+    course: z.string().optional(),
+    yearOfStudy: z.number().min(1, "Year must be at least 1"),
+    educationLevel: z.string().min(1, "Education level is required"),
 }).superRefine((data, ctx) => {
     const hasRegionalBursary = data.bursaryTypes.some(t => t === "COUNTY" || t === "CDF");
     const hasCdf = data.bursaryTypes.includes("CDF");
@@ -67,7 +71,11 @@ const StudentApplication = () => {
             county: "",
             constituency: "",
             cycleYear: new Date().getFullYear(),
-            feeBalance: 0
+            feeBalance: 0,
+            institution: "",
+            course: "",
+            yearOfStudy: 1,
+            educationLevel: "TERTIARY"
         },
         mode: "onTouched"
     });
@@ -100,6 +108,15 @@ const StudentApplication = () => {
                     if (profileData) {
                         if (profileData.county) form.setValue("county", profileData.county);
                         if (profileData.constituency) form.setValue("constituency", profileData.constituency);
+                        if (profileData.familyIncome) form.setValue("familyIncome", parseFloat(profileData.familyIncome));
+                        if (profileData.dependents) form.setValue("dependents", parseInt(profileData.dependents));
+                        if (profileData.orphaned !== undefined) form.setValue("orphaned", !!profileData.orphaned);
+                        if (profileData.disabled !== undefined) form.setValue("disabled", !!profileData.disabled);
+                        if (profileData.academicScore) form.setValue("academicScore", parseFloat(profileData.academicScore));
+                        if (profileData.institution) form.setValue("institution", profileData.institution);
+                        if (profileData.course) form.setValue("course", profileData.course);
+                        if (profileData.yearOfStudy) form.setValue("yearOfStudy", parseInt(profileData.yearOfStudy));
+                        if (profileData.educationLevel) form.setValue("educationLevel", profileData.educationLevel);
                     }
                 })
                 .catch((err) => {
@@ -172,6 +189,10 @@ const StudentApplication = () => {
                 formData.append("disabled", data.disabled.toString());
                 formData.append("academic_score", data.academicScore.toString());
                 formData.append("other_hardships", data.otherHardships || "");
+                formData.append("institution", data.institution);
+                formData.append("course", data.course || "");
+                formData.append("year_of_study", data.yearOfStudy.toString());
+                formData.append("education_level", data.educationLevel);
 
                 if (schoolId) formData.append("school_id", schoolId);
                 if (guardianId) formData.append("guardian_id", guardianId);
@@ -287,6 +308,32 @@ const StudentApplication = () => {
                             <div className="space-y-6 animate-fade-in">
                                 <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Step 1: Financial & Need Assessment</h3>
                                 
+                                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 font-sans">
+                                    <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3">Academic Info (Auto-filled from registration)</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500">Institution</label>
+                                            <input type="text" {...form.register("institution")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500">Course / Program</label>
+                                            <input type="text" {...form.register("course")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500">Year of Study</label>
+                                            <input type="number" {...form.register("yearOfStudy", { valueAsNumber: true })} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500">Education Level</label>
+                                            <select {...form.register("educationLevel")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold">
+                                                <option value="SECONDARY">Secondary</option>
+                                                <option value="TERTIARY">Tertiary / University</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <p className="text-[9px] text-gray-400 mt-2 italic">Note: These details are pre-filled from your profile. Update them if your current status has changed.</p>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Annual Family Income (KES)</label>
