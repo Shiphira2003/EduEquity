@@ -18,6 +18,13 @@ interface FundSource {
     end_date?: string;
 }
 
+const STANDARD_TEMPLATES = [
+    { name: 'NATIONAL', description: 'National Government Bursary Fund', budget: 1000000 },
+    { name: 'CDF', description: 'Constituency Development Fund', budget: 500000 },
+    { name: 'MCA', description: 'Member of County Assembly Bursary', budget: 300000 },
+    { name: 'COUNTY', description: 'County Government Education Fund', budget: 700000 },
+];
+
 const AdminFundSources = () => {
     const [fundSources, setFundSources] = useState<FundSource[]>([]);
     const [loading, setLoading] = useState(true);
@@ -221,17 +228,18 @@ const AdminFundSources = () => {
         }
     };
 
-    const handleCreateSource = async () => {
+    const handleSetupTemplate = async (template: typeof STANDARD_TEMPLATES[0]) => {
         const { value: formValues } = await Swal.fire({
-            title: 'Create Fund Cycle',
+            title: `Setup ${template.name} Cycle`,
             html:
-                '<input id="swal-input1" class="swal2-input" placeholder="Name (e.g. NATIONAL)">' +
-                '<input id="swal-input2" class="swal2-input" placeholder="Description">' +
+                `<input id="swal-input1" class="swal2-input" value="${template.name}" placeholder="Name">` +
+                `<input id="swal-input2" class="swal2-input" value="${template.description}" placeholder="Description">` +
                 `<input id="swal-input3" class="swal2-input" value="${cycleYear}" type="number" placeholder="Cycle Year">` +
-                '<input id="swal-input4" class="swal2-input" type="number" placeholder="Budget Per Cycle">',
+                `<input id="swal-input4" class="swal2-input" value="${template.budget}" type="number" placeholder="Budget Per Cycle">`,
             focusConfirm: false,
             showCancelButton: true,
-            confirmButtonText: 'Create',
+            confirmButtonText: 'Activate Template',
+            confirmButtonColor: '#2563EB',
             preConfirm: () => {
                 return {
                     name: (document.getElementById('swal-input1') as HTMLInputElement).value.toUpperCase(),
@@ -245,17 +253,27 @@ const AdminFundSources = () => {
         if (formValues) {
             try {
                 await api.post('/fund-sources', formValues);
-                Swal.fire('Created!', 'The fund cycle has been created.', 'success');
+                Swal.fire({
+                    title: 'Activated!',
+                    text: `${formValues.name} cycle for ${formValues.cycle_year} is now ready to be filled and opened.`,
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
                 if (formValues.cycle_year === cycleYear) {
                     fetchFundSources();
                 } else {
                     setCycleYear(formValues.cycle_year);
                 }
             } catch (err: any) {
-                Swal.fire('Error', err.response?.data?.message || 'Failed to create fund source.', 'error');
+                Swal.fire('Error', err.response?.data?.message || 'Failed to activate template.', 'error');
             }
         }
     };
+
+    const missingTemplates = STANDARD_TEMPLATES.filter(
+        t => !fundSources.some(s => s.name === t.name)
+    );
 
     return (
         <div className="space-y-8 animate-fade-in pb-12">
@@ -356,110 +374,148 @@ const AdminFundSources = () => {
                     </Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-                    {fundSources.map((source) => {
-                        const budget = parseFloat(source.budget_per_cycle);
-                        const allocated = parseFloat(source.allocated_amount);
-                        const disbursed = parseFloat(source.disbursed_amount);
-                        const progress = budget > 0 ? (allocated / budget) * 100 : 0;
-                        const remaining = budget - allocated;
+                <div className="space-y-12">
+                    {/* Active Cycles */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                        {fundSources.map((source) => {
+                            const budget = parseFloat(source.budget_per_cycle);
+                            const allocated = parseFloat(source.allocated_amount);
+                            const disbursed = parseFloat(source.disbursed_amount);
+                            const progress = budget > 0 ? (allocated / budget) * 100 : 0;
+                            const remaining = budget - allocated;
 
-                        return (
-                            <Card key={source.id} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-zinc-100 hover:border-primary/20 bg-white rounded-3xl p-0">
-                                <div className="p-8">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div>
-                                            <h3 className="text-2xl font-black text-black tracking-tight leading-none mb-2">{source.name}</h3>
+                            return (
+                                <Card key={source.id} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-zinc-100 hover:border-primary/20 bg-white rounded-3xl p-0">
+                                    <div className="p-8">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-black tracking-tight leading-none mb-2">{source.name}</h3>
+                                                <div className="flex gap-2">
+                                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-500 uppercase tracking-widest">{source.cycle_year}</span>
+                                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${source.is_open ? 'bg-green-50 text-green-700 border-green-200' : 'bg-zinc-50 text-zinc-400 border-zinc-200'}`}>
+                                                        {source.is_open ? 'Live & Accepting' : 'Paused / Closed'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                             <div className="flex gap-2">
-                                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-500 uppercase tracking-widest">{source.cycle_year}</span>
-                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${source.is_open ? 'bg-green-50 text-green-700 border-green-200' : 'bg-zinc-50 text-zinc-400 border-zinc-200'}`}>
-                                                    {source.is_open ? 'Live & Accepting' : 'Paused / Closed'}
-                                                </span>
+                                                <button
+                                                    onClick={() => handleToggleOpen(source)}
+                                                    className={`p-4 rounded-2xl shadow-lg transition-all text-white transform hover:-translate-y-1 active:scale-95 ${source.is_open ? 'bg-zinc-900 shadow-zinc-200' : 'bg-primary shadow-primary/20'}`}
+                                                >
+                                                    <Power className="h-5 w-5" strokeWidth={3} />
+                                                </button>
+                                                <div className="flex flex-col gap-2">
+                                                    <button
+                                                        onClick={() => handleEditBudget(source)}
+                                                        className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-primary hover:border-primary/20 transition-all"
+                                                        title="Edit Budget"
+                                                    >
+                                                        <Edit3 className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteSource(source)}
+                                                        className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-red-500 hover:border-red-200 transition-all"
+                                                        title="Delete Source"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleToggleOpen(source)}
-                                                className={`p-4 rounded-2xl shadow-lg transition-all text-white transform hover:-translate-y-1 active:scale-95 ${source.is_open ? 'bg-zinc-900 shadow-zinc-200' : 'bg-primary shadow-primary/20'}`}
-                                            >
-                                                <Power className="h-5 w-5" strokeWidth={3} />
-                                            </button>
-                                            <div className="flex flex-col gap-2">
-                                                <button
-                                                    onClick={() => handleEditBudget(source)}
-                                                    className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-primary hover:border-primary/20 transition-all"
-                                                    title="Edit Budget"
-                                                >
-                                                    <Edit3 className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteSource(source)}
-                                                    className="p-2 bg-white border border-zinc-100 rounded-xl shadow-sm text-zinc-500 hover:text-red-500 hover:border-red-200 transition-all"
-                                                    title="Delete Source"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
+
+                                        {/* Dashboard Metrics */}
+                                        <div className="grid grid-cols-2 gap-8 mb-10">
+                                            <div className="border-l-4 border-zinc-900 pl-4">
+                                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Budget</p>
+                                                <p className="text-xl font-black text-black leading-tight">{formatCurrency(budget)}</p>
+                                            </div>
+                                            <div className="border-l-4 border-primary pl-4">
+                                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Remaining</p>
+                                                <p className="text-xl font-black text-black leading-tight">{formatCurrency(remaining)}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Utilization Progress */}
+                                        <div className="mb-10">
+                                            <div className="flex justify-between items-end mb-3">
+                                                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Allocation Priority</span>
+                                                <span className={`text-sm font-black ${getUtilizationTextColor(progress)}`}>{progress.toFixed(1)}% Used</span>
+                                            </div>
+                                            <div className="w-full bg-zinc-100 rounded-full h-4 overflow-hidden p-1 border border-zinc-100 shadow-inner">
+                                                <div 
+                                                    className={`h-full rounded-full transition-all duration-1000 shadow-lg ${getUtilizationColor(progress)}`} 
+                                                    style={{ width: `${progress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+
+                                        {/* Detailed Stats */}
+                                        <div className="grid grid-cols-2 gap-4 bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
+                                            <div>
+                                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Total Payouts</p>
+                                                <p className="text-sm font-bold text-black">{formatCurrency(disbursed)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Committed Funds</p>
+                                                <p className="text-sm font-bold text-black">{formatCurrency(allocated)}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Timeline Actions */}
+                                        <div className="mt-8 pt-8 border-t border-zinc-50 flex items-center justify-between">
+                                            <div className="cursor-pointer group/date" onClick={() => handleEditDates(source)}>
+                                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1 group-hover/date:text-primary transition-colors">Window Schedule</p>
+                                                <p className="text-xs font-bold text-zinc-900 flex items-center gap-2">
+                                                    {source.start_date ? new Date(source.start_date).toLocaleDateString() : '—'} 
+                                                    <span className="text-zinc-300">to</span> 
+                                                    {source.end_date ? new Date(source.end_date).toLocaleDateString() : '—'}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center text-zinc-300">
+                                                <TrendingUp size={16} />
                                             </div>
                                         </div>
                                     </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
 
-                                    {/* Dashboard Metrics */}
-                                    <div className="grid grid-cols-2 gap-8 mb-10">
-                                        <div className="border-l-4 border-zinc-900 pl-4">
-                                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Budget</p>
-                                            <p className="text-xl font-black text-black leading-tight">{formatCurrency(budget)}</p>
-                                        </div>
-                                        <div className="border-l-4 border-primary pl-4">
-                                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Remaining</p>
-                                            <p className="text-xl font-black text-black leading-tight">{formatCurrency(remaining)}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Utilization Progress */}
-                                    <div className="mb-10">
-                                        <div className="flex justify-between items-end mb-3">
-                                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Allocation Priority</span>
-                                            <span className={`text-sm font-black ${getUtilizationTextColor(progress)}`}>{progress.toFixed(1)}% Used</span>
-                                        </div>
-                                        <div className="w-full bg-zinc-100 rounded-full h-4 overflow-hidden p-1 border border-zinc-100 shadow-inner">
-                                            <div 
-                                                className={`h-full rounded-full transition-all duration-1000 shadow-lg ${getUtilizationColor(progress)}`} 
-                                                style={{ width: `${progress}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Detailed Stats */}
-                                    <div className="grid grid-cols-2 gap-4 bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
-                                        <div>
-                                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Total Payouts</p>
-                                            <p className="text-sm font-bold text-black">{formatCurrency(disbursed)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Committed Funds</p>
-                                            <p className="text-sm font-bold text-black">{formatCurrency(allocated)}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Timeline Actions */}
-                                    <div className="mt-8 pt-8 border-t border-zinc-50 flex items-center justify-between">
-                                        <div className="cursor-pointer group/date" onClick={() => handleEditDates(source)}>
-                                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1 group-hover/date:text-primary transition-colors">Window Schedule</p>
-                                            <p className="text-xs font-bold text-zinc-900 flex items-center gap-2">
-                                                {source.start_date ? new Date(source.start_date).toLocaleDateString() : '—'} 
-                                                <span className="text-zinc-300">to</span> 
-                                                {source.end_date ? new Date(source.end_date).toLocaleDateString() : '—'}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center text-zinc-300">
-                                            <TrendingUp size={16} />
-                                        </div>
-                                    </div>
+                    {/* Template / Suggested Sources */}
+                    {missingTemplates.length > 0 && (
+                        <div className="mt-16 pt-16 border-t border-zinc-100">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="p-3 bg-zinc-100 rounded-2xl text-zinc-400"><PieChart size={24} strokeWidth={2.5} /></div>
+                                <div>
+                                    <h2 className="text-xl font-black text-black">Suggested Fund Cycles</h2>
+                                    <p className="text-sm font-medium text-zinc-400">Ready-to-activate templates for common budget sources.</p>
                                 </div>
-                            </Card>
-                        );
-                    })}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                {missingTemplates.map((template) => (
+                                    <div key={template.name} className="group bg-white border-2 border-dashed border-zinc-100 rounded-3xl p-6 hover:border-primary/40 hover:bg-zinc-50/50 transition-all duration-300">
+                                        <div className="p-4 bg-zinc-50 rounded-2xl w-fit mb-6 group-hover:scale-110 group-hover:bg-primary/5 transition-all duration-500">
+                                            <Banknote className="text-zinc-300 group-hover:text-primary" size={24} strokeWidth={2.5} />
+                                        </div>
+                                        <h3 className="text-lg font-black text-black mb-1 leading-none">{template.name}</h3>
+                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">{template.description}</p>
+                                        <div className="mb-6">
+                                            <p className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mb-0.5">EST. BUDGET</p>
+                                            <p className="text-sm font-black text-zinc-500">{formatCurrency(template.budget)}</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleSetupTemplate(template)}
+                                            className="w-full py-4 bg-zinc-900 group-hover:bg-primary text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-zinc-200 group-hover:shadow-primary/20 transition-all transform group-hover:-translate-y-1"
+                                        >
+                                            Setup Cycle
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
+
             )}
         </div>
     );

@@ -10,6 +10,7 @@ import { Footer } from "../components/Footer";
 import logo from "../images/logo.png";
 import loginImage from "../images/login-image.jpg";
 import Swal from "sweetalert2";
+import { User, ShieldCheck, ArrowRight, Mail, Lock } from "lucide-react";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export default function Login() {
     const [error, setError] = useState("");
     const { loginUser } = useAuth();
     const navigate = useNavigate();
+    const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ADMIN'>('STUDENT');
 
     const location = useLocation();
 
@@ -94,9 +96,38 @@ export default function Login() {
                                     <img src={logo} alt="BursarHub" className="w-full h-full object-contain" />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-extrabold text-black">
-                                Sign in to BursarHub
+                            <h2 className="text-3xl font-extrabold text-black tracking-tight">
+                                {selectedRole === 'STUDENT' ? 'Student Portal' : 'Admin Nexus'}
                             </h2>
+                            <p className="mt-2 text-zinc-500 font-medium">Please enter your credentials to gain access.</p>
+                        </div>
+
+                        {/* Role Selector */}
+                        <div className="flex p-1.5 bg-gray-100/80 rounded-2xl mb-8 border border-gray-200/50">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedRole('STUDENT')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-bold text-sm ${
+                                    selectedRole === 'STUDENT'
+                                        ? 'bg-white text-primary shadow-sm ring-1 ring-black/5'
+                                        : 'text-zinc-500 hover:text-zinc-700 hover:bg-white/50'
+                                }`}
+                            >
+                                <User className={`w-4 h-4 ${selectedRole === 'STUDENT' ? 'text-primary' : 'text-zinc-400'}`} />
+                                Student Login
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedRole('ADMIN')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-bold text-sm ${
+                                    selectedRole === 'ADMIN'
+                                        ? 'bg-white text-primary shadow-sm ring-1 ring-black/5'
+                                        : 'text-zinc-500 hover:text-zinc-700 hover:bg-white/50'
+                                }`}
+                            >
+                                <ShieldCheck className={`w-4 h-4 ${selectedRole === 'ADMIN' ? 'text-primary' : 'text-zinc-400'}`} />
+                                Administrative
+                            </button>
                         </div>
 
                         <Card className="py-8 px-4 sm:px-10 shadow-xl border border-gray-100">
@@ -155,9 +186,10 @@ export default function Login() {
                                         fullWidth
                                         isLoading={isLoading}
                                         variant="primary"
-                                        className="h-12 text-base font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                        className="h-14 text-base font-bold shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-1 transition-all rounded-2xl flex items-center justify-center gap-3"
                                     >
-                                        Sign in
+                                        Log In as {selectedRole === 'STUDENT' ? 'Student' : 'Admin'}
+                                        <ArrowRight className="w-5 h-5" />
                                     </Button>
                                 </div>
 

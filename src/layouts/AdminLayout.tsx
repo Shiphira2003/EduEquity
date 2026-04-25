@@ -18,7 +18,8 @@ import {
     GraduationCap,
     Award,
     X,
-    BarChart4
+    BarChart4,
+    CreditCard
 } from 'lucide-react';
 import logo from '../images/logo.png';
 
@@ -45,18 +46,20 @@ const AdminLayout: React.FC = () => {
     };
 
     const navItems = [
-        { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-        { to: '/admin/users', icon: <Users size={20} />, label: 'Users', superOnly: true },
-        { to: '/admin/students', icon: <GraduationCap size={20} />, label: 'Students' },
-        { to: '/admin/applications', icon: <FileText size={20} />, label: 'Applications' },
-        { to: '/admin/ranking', icon: <Award size={20} />, label: 'Ranking Dashboard' },
-        { to: '/admin/disbursements', icon: <Banknote size={20} />, label: 'Disbursements' },
-        { to: '/admin/fund-sources', icon: <Settings size={20} />, label: 'Fund Cycles' },
-        { to: '/admin/audit-logs', icon: <ClipboardList size={20} />, label: 'Audit Logs' },
-        { to: '/admin/reports', icon: <BarChart4 size={20} />, label: 'Financial Reports' },
-        { to: '/admin/announcements', icon: <Bell size={20} />, label: 'Announcements' },
-        { to: '/admin/profile', icon: <UserCircle size={20} />, label: 'My Profile' },
-    ].filter(item => !item.superOnly || user?.role === 'SUPER_ADMIN');
+        { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+        { to: '/admin/users', icon: <Users size={20} />, label: 'Users', visibleTo: ['SUPER_ADMIN'] },
+        { to: '/admin/community', icon: <Users size={20} />, label: 'Community', visibleTo: ['ADMIN'] },
+        { to: '/admin/students', icon: <GraduationCap size={20} />, label: 'Students', visibleTo: ['ADMIN'] },
+        { to: '/admin/applications', icon: <FileText size={20} />, label: 'Applications', visibleTo: ['ADMIN'] },
+        { to: '/admin/ranking', icon: <Award size={20} />, label: 'Ranking Dashboard', visibleTo: ['ADMIN'] },
+        { to: '/admin/disbursements', icon: <Banknote size={20} />, label: 'Disbursements', visibleTo: ['ADMIN'] },
+        { to: '/admin/payments', icon: <CreditCard size={20} />, label: 'Stripe Ledger', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+        { to: '/admin/fund-sources', icon: <Settings size={20} />, label: 'Fund Cycles', visibleTo: ['ADMIN'] },
+        { to: '/admin/audit-logs', icon: <ClipboardList size={20} />, label: 'Audit Logs', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+        { to: '/admin/reports', icon: <BarChart4 size={20} />, label: 'Financial Reports', visibleTo: ['ADMIN'] },
+        { to: '/admin/announcements', icon: <Bell size={20} />, label: 'Announcements', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+        { to: '/admin/profile', icon: <UserCircle size={20} />, label: 'My Profile', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+    ].filter(item => user?.role && item.visibleTo.includes(user.role));
 
     // Get current page title
     const currentPage = navItems.find(item =>

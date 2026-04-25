@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import Swal from 'sweetalert2';
 
 export default function AdminAnnouncements() {
+    const { user } = useAuth();
+    const isSuper = user?.role === 'SUPER_ADMIN';
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
@@ -31,7 +34,7 @@ export default function AdminAnnouncements() {
         
         const confirmResult = await Swal.fire({
             title: 'Broadcast Announcement?',
-            text: "Are you sure you want to publish this to all students?",
+            text: `Are you sure you want to publish this to ${isSuper ? 'all administrators' : 'all students'}?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0052FF',
@@ -92,7 +95,7 @@ export default function AdminAnnouncements() {
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit">Broadcast to Students</Button>
+                        <Button type="submit">{isSuper ? 'Broadcast to Admins' : 'Broadcast to Students'}</Button>
                     </div>
                 </form>
             </Card>

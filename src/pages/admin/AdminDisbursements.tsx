@@ -11,7 +11,7 @@ import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
-import { Edit2, Trash2, Banknote, Search, Calendar, Hash, AlertCircle, TrendingDown } from 'lucide-react';
+import { Edit2, Trash2, Banknote, Search, Calendar, Hash, AlertCircle, TrendingDown, CreditCard } from 'lucide-react';
 import { getApplications } from '../../api/admin.api';
 import { getCashFlowSummary } from '../../api/reports.api';
 import Swal from 'sweetalert2';
@@ -121,6 +121,20 @@ export default function AdminDisbursements() {
             confirmButtonText: 'Yes, delete it'
         });
         if (confirmResult.isConfirmed) deleteMutation.mutate(id);
+    };
+
+    const handleStripeCheckout = async (d: Disbursement) => {
+        try {
+            const res = await api.post('/payments/checkout-session', {
+                amount: d.amount,
+                applicationId: d.allocation_id
+            });
+            if (res.data?.url) {
+                window.location.href = res.data.url;
+            }
+        } catch (err: any) {
+            Swal.fire('Stripe Error', err.response?.data?.error || 'Failed to initialize payment gateway', 'error');
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -335,6 +349,11 @@ export default function AdminDisbursements() {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2 justify-end">
+                                        {d.status === 'PENDING' && (
+                                            <button onClick={() => handleStripeCheckout(d)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Process via Stripe">
+                                                <CreditCard size={16} />
+                                            </button>
+                                        )}
                                         <button onClick={() => openEdit(d)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Record"><Edit2 size={16} /></button>
                                         <button onClick={() => handleDelete(d.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Record"><Trash2 size={16} /></button>
                                     </div>

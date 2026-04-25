@@ -57,7 +57,7 @@ export default function RegisterStudent() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { loginUser } = useAuth();
+    const { loginUser, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (
@@ -85,22 +85,24 @@ export default function RegisterStudent() {
         setError(null);
 
         try {
+            // Log out any existing user to ensure a fresh session
+            logout();
+
             const response = await registerStudent(form);
             
-            // Seamless login
+            // Automatic login with the returned credentials
             if (response.accessToken && response.user) {
                 loginUser(response.accessToken, response.user);
             }
 
             await Swal.fire({
                 title: 'Welcome to BursarHub!',
-                text: response.message || 'Your account has been registered successfully.',
+                text: 'Your account has been registered and you are now logged in.',
                 icon: 'success',
                 confirmButtonColor: '#2563EB'
             });
 
-            const isAdmin = response.user?.role === "ADMIN" || response.user?.role === "SUPER_ADMIN";
-            navigate(isAdmin ? "/admin" : "/student/dashboard");
+            navigate("/student/dashboard");
         } catch (err: unknown) {
             let errorMsg = "Registration failed";
             if (axios.isAxiosError(err)) {

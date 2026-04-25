@@ -12,6 +12,8 @@ import AdminStudents from "./pages/admin/AdminStudents.tsx";
 import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminApplications from "./pages/admin/AdminApplications.tsx";
 import AdminDisbursements from "./pages/admin/AdminDisbursements.tsx";
+import AdminPayments from "./pages/admin/AdminPayments.tsx";
+import AdminCommunity from "./pages/admin/AdminCommunity.tsx";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs.tsx";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements.tsx";
 import AdminFundSources from "./pages/admin/AdminFundSources.tsx";
@@ -57,6 +59,8 @@ function App() {
             >
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="community" element={<AdminCommunity />} />
+                <Route path="payments" element={<AdminPayments />} />
                 <Route path="profile" element={<AdminProfile />} />
                 <Route path="students" element={<AdminStudents />} />
                 <Route path="applications" element={<AdminApplications />} />

@@ -164,19 +164,19 @@ const MyApplications: React.FC = () => {
                             {/* Step 3: Decision/Award */}
                             <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
                                 <div className={`flex items-center justify-center w-6 h-6 rounded-full border border-white shrink-0 shadow z-10 ${
-                                    selectedApp.status === 'APPROVED' ? 'bg-green-500' :
+                                    (selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? 'bg-green-500' :
                                     selectedApp.status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-300'
                                 }`}>
-                                    {selectedApp.status === 'APPROVED' ? <CheckCircle2 className="w-3 h-3 text-white" /> :
+                                    {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? <CheckCircle2 className="w-3 h-3 text-white" /> :
                                      selectedApp.status === 'REJECTED' ? <XCircle className="w-3 h-3 text-white" /> : <AlertCircle className="w-3 h-3 text-white" />}
                                 </div>
                                 <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] ml-4 md:ml-0 md:pl-4">
                                     <div className={`flex flex-col p-3 rounded-lg border shadow-sm ${
-                                        selectedApp.status === 'APPROVED' ? 'bg-green-50 border-green-100' :
+                                        (selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? 'bg-green-50 border-green-100' :
                                         selectedApp.status === 'REJECTED' ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'
                                     }`}>
                                         <span className="font-bold text-slate-900 text-sm">Award Status: <Badge variant={getStatusVariant(selectedApp.status)}>{selectedApp.status}</Badge></span>
-                                        {selectedApp.status === 'APPROVED' && (
+                                        {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') && (
                                             <span className="text-sm font-bold text-green-700 mt-1">Awarded: {formatCurrency(selectedApp.amount_allocated)}</span>
                                         )}
                                         {selectedApp.status === 'REJECTED' && (
@@ -190,10 +190,10 @@ const MyApplications: React.FC = () => {
                             </div>
 
                             {/* Step 4: Disbursement History */}
-                            {selectedApp.status === 'APPROVED' && (
+                            {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') && (
                                 <div className="relative flex items-center justify-between md:justify-normal md:even:flex-row-reverse group">
                                     <div className={`flex items-center justify-center w-6 h-6 rounded-full border border-white shrink-0 shadow z-10 ${
-                                        selectedApp.disbursement_status === 'PROCESSED' ? 'bg-blue-500' : 'bg-slate-300'
+                                        (selectedApp.disbursement_status === 'PROCESSED' || selectedApp.status === 'COMPLETED') ? 'bg-blue-500' : 'bg-slate-300'
                                     }`}>
                                         <Banknote className="w-3 h-3 text-white" />
                                     </div>
@@ -201,7 +201,7 @@ const MyApplications: React.FC = () => {
                                         <div className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-sm text-right">
                                             <span className="font-bold text-slate-900 text-sm">Disbursement Status</span>
                                             <span className="text-xs text-slate-500 mt-1">
-                                                {selectedApp.disbursement_status === 'PROCESSED' 
+                                                {(selectedApp.disbursement_status === 'PROCESSED' || selectedApp.status === 'COMPLETED')
                                                     ? 'Funds have been dispatched to your institution.'
                                                     : 'Awaiting batch disbursement.'}
                                             </span>

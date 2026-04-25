@@ -200,23 +200,23 @@ const TrackStatus: React.FC = () => {
                                     {/* STEP 3: DECISION */}
                                     <li className="relative flex items-start group">
                                         <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full shrink-0 shadow-sm ${
-                                            selectedApp.status === 'APPROVED' ? 'bg-green-600 shadow-green-200' : 
+                                            (selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? 'bg-green-600 shadow-green-200' : 
                                             selectedApp.status === 'REJECTED' ? 'bg-red-600 shadow-red-200' : 'bg-gray-100 border-2 border-gray-300'
                                         }`}>
-                                            {selectedApp.status === 'APPROVED' ? <CheckCircle2 className="h-6 w-6 text-white" /> :
+                                            {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? <CheckCircle2 className="h-6 w-6 text-white" /> :
                                              selectedApp.status === 'REJECTED' ? <XCircle className="h-6 w-6 text-white" /> :
                                              <AlertCircle className="h-6 w-6 text-gray-400" />}
                                         </div>
                                         <div className="ml-6 flex-1 pt-1">
                                             <h3 className={`text-lg font-bold ${
-                                                selectedApp.status === 'APPROVED' ? 'text-green-700' : 
+                                                (selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? 'text-green-700' : 
                                                 selectedApp.status === 'REJECTED' ? 'text-red-700' : 'text-gray-500'
                                             }`}>
-                                                {selectedApp.status === 'APPROVED' ? 'Application Approved' : 
+                                                {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') ? 'Application Approved' : 
                                                  selectedApp.status === 'REJECTED' ? 'Application Rejected' : 'Final Decision'}
                                             </h3>
                                             
-                                            {selectedApp.status === 'APPROVED' && (
+                                            {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') && (
                                                 <div className="mt-3 bg-green-50 p-4 rounded-lg border border-green-100 inline-block">
                                                     <p className="text-sm font-medium text-green-900">Allocated Amount: <span className="text-lg font-bold ml-1">{formatCurrency(selectedApp.amount_allocated)}</span></p>
                                                 </div>
@@ -235,24 +235,24 @@ const TrackStatus: React.FC = () => {
                                     </li>
 
                                     {/* STEP 4: DISBURSEMENT */}
-                                    {selectedApp.status === 'APPROVED' && (
+                                    {(selectedApp.status === 'APPROVED' || selectedApp.status === 'COMPLETED') && (
                                         <li className="relative flex items-start group">
                                             <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full shrink-0 shadow-sm ${
-                                                selectedApp.disbursement_status === 'PROCESSED' ? 'bg-blue-600 shadow-blue-200' :
+                                                (selectedApp.disbursement_status === 'PROCESSED' || selectedApp.status === 'COMPLETED') ? 'bg-blue-600 shadow-blue-200' :
                                                 'bg-blue-50 border-2 border-blue-400'
                                             }`}>
-                                                {selectedApp.disbursement_status === 'PROCESSED' ? (
+                                                {(selectedApp.disbursement_status === 'PROCESSED' || selectedApp.status === 'COMPLETED') ? (
                                                     <CheckCircle2 className="h-6 w-6 text-white" />
                                                 ) : (
                                                     <Banknote className={`h-6 w-6 ${selectedApp.disbursement_status ? 'text-blue-500' : 'text-gray-400'}`} />
                                                 )}
                                             </div>
                                             <div className="ml-6 flex-1 pt-1">
-                                                <h3 className={`text-lg font-bold ${selectedApp.disbursement_status === 'PROCESSED' ? 'text-gray-900' : 'text-gray-700'}`}>
+                                                <h3 className={`text-lg font-bold ${(selectedApp.disbursement_status === 'PROCESSED' || selectedApp.status === 'COMPLETED') ? 'text-gray-900' : 'text-gray-700'}`}>
                                                     Disbursement
                                                 </h3>
                                                 <p className="mt-1 text-sm text-gray-600">
-                                                    {selectedApp.disbursement_status === 'PROCESSED' 
+                                                    {selectedApp.status === 'COMPLETED' || selectedApp.disbursement_status === 'PROCESSED'
                                                         ? `Funds have been processed and dispatched to your institution's bank account.`
                                                         : selectedApp.disbursement_status === 'APPROVED'
                                                         ? 'Disbursement has been approved and is queued for processing.'
