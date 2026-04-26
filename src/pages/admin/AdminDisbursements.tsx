@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
     getDisbursements, 
     createDisbursement, 
     updateDisbursement, 
     deleteDisbursement, 
+    generateBulkDisbursements,
     type Disbursement 
 } from '../../api/admin.api';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
-import { Edit2, Trash2, Banknote, Search, Calendar, Hash, AlertCircle, TrendingDown, CreditCard } from 'lucide-react';
+import { Edit2, Trash2, Banknote, Search, Calendar, Hash, AlertCircle, TrendingDown, CreditCard, DollarSign, ArrowLeft, Home } from 'lucide-react';
 import { getApplications } from '../../api/admin.api';
 import { getCashFlowSummary } from '../../api/reports.api';
+import api from '../../api/axios';
 import Swal from 'sweetalert2';
 
 export default function AdminDisbursements() {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
@@ -98,6 +102,22 @@ export default function AdminDisbursements() {
         }
     });
 
+    const bulkGenerateMutation = useMutation({
+        mutationFn: generateBulkDisbursements,
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ['adminDisbursements'] });
+            Swal.fire({
+                title: 'Generation Complete',
+                text: res.message,
+                icon: res.created_count > 0 ? 'success' : 'info',
+                confirmButtonColor: '#2563EB'
+            });
+        },
+        onError: (err: any) => {
+            Swal.fire('Failed', err.response?.data?.error || err.response?.data?.message || 'Could not generate records', 'error');
+        }
+    });
+
     const openAdd = () => {
         setEditMode(false);
         setFormData({ id: 0, allocation_id: 0, amount: 0, status: 'PENDING', reference_number: '', fund_source: 'NATIONAL' });
@@ -127,13 +147,89 @@ export default function AdminDisbursements() {
         try {
             const res = await api.post('/payments/checkout-session', {
                 amount: d.amount,
-                applicationId: d.allocation_id
+                applicationId: d.allocation_id,
+                disbursementId: d.id
             });
             if (res.data?.url) {
                 window.location.href = res.data.url;
             }
         } catch (err: any) {
             Swal.fire('Stripe Error', err.response?.data?.error || 'Failed to initialize payment gateway', 'error');
+        }
+    };
+
+    const handleBulkGenerate = () => {
+        Swal.fire({
+            title: 'Auto-Generate Records?',
+            text: "This will create pending disbursement records for all approved applications that don't have one yet.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            confirmButtonText: 'Yes, generate all'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                bulkGenerateMutation.mutate();
+            }
+        });
+    };
+
+    const handleBulkPayment = async () => {
+        // Get all pending disbursements that need payment
+        const pendingDisbursements = disbursements.filter(d => d.status === 'PENDING');
+
+        if (pendingDisbursements.length === 0) {
+            Swal.fire('No Pending Disbursements', 'There are no pending disbursements ready for payment.', 'info');
+            return;
+        }
+
+        const totalAmount = pendingDisbursements.reduce((sum, d) => sum + parseFloat(d.amount as string), 0);
+
+        const confirmResult = await Swal.fire({
+            title: 'Bulk Payment Confirmation',
+            html: `
+                <div class="text-left">
+                    <p class="mb-4">You are about to process payment for <strong>${pendingDisbursements.length}</strong> pending disbursements.</p>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">Total Amount:</span>
+                            <span class="text-xl font-bold text-green-600">KES ${totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p class="mb-1">Disbursements included:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                ${pendingDisbursements.slice(0, 5).map(d => `<li>#DISB-${d.id} - ${d.student_name} - KES ${parseFloat(d.amount as string).toLocaleString()}</li>`).join('')}
+                                ${pendingDisbursements.length > 5 ? `<li>... and ${pendingDisbursements.length - 5} more</li>` : ''}
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500">This will redirect you to Stripe for secure payment processing.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Proceed to Payment',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
+        try {
+            // Create bulk checkout session
+            const res = await api.post('/payments/bulk-checkout-session', {
+                disbursements: pendingDisbursements.map(d => ({
+                    amount: d.amount,
+                    applicationId: d.allocation_id,
+                    disbursementId: d.id
+                }))
+            });
+
+            if (res.data?.url) {
+                window.location.href = res.data.url;
+            }
+        } catch (err: any) {
+            Swal.fire('Payment Error', err.response?.data?.error || 'Failed to initialize bulk payment', 'error');
         }
     };
 
@@ -149,17 +245,47 @@ export default function AdminDisbursements() {
     return (
         <div className="space-y-6 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <Banknote className="text-green-600" />
-                        Scholarship Disbursements
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1">Official records of bursary payments to institutions.</p>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/admin')}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Home
+                        </button>
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-black tracking-tight mb-2">Scholarship Disbursements</h1>
+                        <p className="text-zinc-500 font-medium tracking-tight">Official records of payout distributions and payment gateway status.</p>
+                    </div>
                 </div>
-                <Button onClick={openAdd} variant="primary" className="flex items-center gap-2">
-                    <Banknote size={16} />
-                    New Disbursement
-                </Button>
+                <div className="flex gap-3">
+                    <Button 
+                        onClick={handleBulkGenerate} 
+                        variant="primary" 
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+                        isLoading={bulkGenerateMutation.isPending}
+                    >
+                        <Calendar size={16} />
+                        Generate for Approved
+                    </Button>
+                    <Button onClick={handleBulkPayment} variant="action" className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+                        <DollarSign size={16} />
+                        Pay All Pending
+                    </Button>
+                    <Button onClick={openAdd} variant="primary" className="flex items-center gap-2">
+                        <Banknote size={16} />
+                        New Disbursement
+                    </Button>
+                </div>
             </div>
 
             {showModal && (
@@ -229,6 +355,7 @@ export default function AdminDisbursements() {
                                     <select className="w-full border border-gray-300 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })}>
                                         <option value="PENDING">PENDING</option>
                                         <option value="PROCESSED">PROCESSED</option>
+                                        <option value="PAID">PAID</option>
                                     </select>
                                 </div>
                             </div>
@@ -343,7 +470,7 @@ export default function AdminDisbursements() {
                                     <span className="text-base font-bold text-gray-900">KES {parseFloat(d.amount as string).toLocaleString()}</span>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={d.status === 'PROCESSED' ? 'success' : 'warning'}>
+                                    <Badge variant={(d.status === 'PROCESSED' || d.status === 'PAID') ? 'success' : 'warning'}>
                                         {d.status}
                                     </Badge>
                                 </TableCell>

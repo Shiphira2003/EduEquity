@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import Swal from 'sweetalert2';
 import { Card } from '../../components/Card';
-import { Plus, Power, Banknote, PieChart, TrendingUp, Info, Edit3, Trash2 } from 'lucide-react';
+import { Plus, Power, Banknote, PieChart, TrendingUp, Info, Edit3, Trash2, ArrowLeft, Home } from 'lucide-react';
 import { Button } from '../../components/Button';
+import { useNavigate } from 'react-router-dom';
 
 interface FundSource {
     id: number;
@@ -26,6 +27,7 @@ const STANDARD_TEMPLATES = [
 ];
 
 const AdminFundSources = () => {
+    const navigate = useNavigate();
     const [fundSources, setFundSources] = useState<FundSource[]>([]);
     const [loading, setLoading] = useState(true);
     const [cycleYear, setCycleYear] = useState(new Date().getFullYear());
@@ -271,6 +273,54 @@ const AdminFundSources = () => {
         }
     };
 
+    const handleCreateSource = async () => {
+        const { value: formValues } = await Swal.fire({
+            title: 'Create New Fund Source',
+            html:
+                `<input id="swal-input1" class="swal2-input" placeholder="Fund Source Name (e.g., NATIONAL)">` +
+                `<input id="swal-input2" class="swal2-input" placeholder="Description">` +
+                `<input id="swal-input3" class="swal2-input" value="${cycleYear}" type="number" placeholder="Cycle Year">` +
+                `<input id="swal-input4" class="swal2-input" type="number" placeholder="Budget Per Cycle">`,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Create Source',
+            confirmButtonColor: '#2563EB',
+            preConfirm: () => {
+                const name = (document.getElementById('swal-input1') as HTMLInputElement).value.toUpperCase();
+                const description = (document.getElementById('swal-input2') as HTMLInputElement).value;
+                const cycle_year = parseInt((document.getElementById('swal-input3') as HTMLInputElement).value);
+                const budget_per_cycle = parseFloat((document.getElementById('swal-input4') as HTMLInputElement).value);
+
+                if (!name || !description || !cycle_year || !budget_per_cycle) {
+                    Swal.showValidationMessage('All fields are required');
+                    return null;
+                }
+
+                return { name, description, cycle_year, budget_per_cycle };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await api.post('/fund-sources', formValues);
+                Swal.fire({
+                    title: 'Created!',
+                    text: `${formValues.name} has been created successfully.`,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                if (formValues.cycle_year === cycleYear) {
+                    fetchFundSources();
+                } else {
+                    setCycleYear(formValues.cycle_year);
+                }
+            } catch (err: any) {
+                Swal.fire('Error', err.response?.data?.message || 'Failed to create fund source.', 'error');
+            }
+        }
+    };
+
     const missingTemplates = STANDARD_TEMPLATES.filter(
         t => !fundSources.some(s => s.name === t.name)
     );
@@ -278,11 +328,29 @@ const AdminFundSources = () => {
     return (
         <div className="space-y-8 animate-fade-in pb-12">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-black tracking-tight mb-2">Fund Management Dashboard</h1>
-                    <p className="text-zinc-500 font-medium tracking-tight">
-                        Monitor budget utilization and application windows for {cycleYear}.
-                    </p>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/admin')}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Home
+                        </button>
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-black tracking-tight mb-2">Fund Management Dashboard</h1>
+                        <p className="text-zinc-500 font-medium tracking-tight">
+                            Monitor budget utilization and application windows for {cycleYear}.
+                        </p>
+                    </div>
                 </div>
                 <div className="flex gap-3">
                     <select

@@ -19,7 +19,10 @@ import {
     Award,
     X,
     BarChart4,
-    CreditCard
+    CreditCard,
+    Home,
+    Info,
+    FileSpreadsheet
 } from 'lucide-react';
 import logo from '../images/logo.png';
 
@@ -46,7 +49,8 @@ const AdminLayout: React.FC = () => {
     };
 
     const navItems = [
-        { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
+
+        { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'App Dashboard', visibleTo: ['SUPER_ADMIN', 'ADMIN'] },
         { to: '/admin/users', icon: <Users size={20} />, label: 'Users', visibleTo: ['SUPER_ADMIN'] },
         { to: '/admin/community', icon: <Users size={20} />, label: 'Community', visibleTo: ['ADMIN'] },
         { to: '/admin/students', icon: <GraduationCap size={20} />, label: 'Students', visibleTo: ['ADMIN'] },

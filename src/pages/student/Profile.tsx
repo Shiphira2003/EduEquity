@@ -7,10 +7,32 @@ import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { AvatarSelector, AvatarDisplay } from '../../components/AvatarSelector';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
+import { SearchableSelect } from '../../components/SearchableSelect';
+
+interface StudentProfile {
+    full_name: string;
+    national_id: string;
+    institution: string;
+    education_level: string;
+    course: string;
+    year_of_study: number;
+    school_bank_name: string;
+    school_account_number: string;
+    county: string;
+    constituency: string;
+    familyIncome: number;
+    dependents: number;
+    orphaned: boolean;
+    disabled: boolean;
+    avatar?: string;
+    is_bank_locked?: boolean;
+    isNew?: boolean;
+}
 
 const Profile: React.FC = () => {
     const { loginUser, user } = useAuth();
-    const [profile, setProfile] = useState<any>(null);
+    const [profile, setProfile] = useState<StudentProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +60,10 @@ const Profile: React.FC = () => {
                     school_account_number: '',
                     county: '',
                     constituency: '',
+                    familyIncome: 0,
+                    dependents: 0,
+                    orphaned: false,
+                    disabled: false,
                     is_bank_locked: false,
                     isNew: true
                 });
@@ -46,6 +72,26 @@ const Profile: React.FC = () => {
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFetchInstitutions = async (query: string) => {
+        try {
+            const res = await api.get(`/institutions/search?q=${encodeURIComponent(query)}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Institution fetch error:", err);
+            return [];
+        }
+    };
+
+    const handleFetchCourses = async (query: string) => {
+        try {
+            const res = await api.get(`/courses/search?q=${encodeURIComponent(query)}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Course fetch error:", err);
+            return [];
         }
     };
 
@@ -62,6 +108,7 @@ const Profile: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!profile) return;
 
         const confirmResult = await Swal.fire({
             title: 'Confirm Profile Changes',
@@ -95,7 +142,6 @@ const Profile: React.FC = () => {
                 dependents: profile.dependents,
                 orphaned: profile.orphaned,
                 disabled: profile.disabled,
-                academicScore: profile.academicScore
             };
             if (profile.isNew) {
                 payload.national_id = profile.national_id;
@@ -144,7 +190,7 @@ const Profile: React.FC = () => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32" />
                 
                 <div className="relative flex flex-col md:flex-row items-center gap-8">
-                    <AvatarDisplay id={profile.avatar} className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl" />
+                    <AvatarDisplay id={profile.avatar || 'av1'} className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl" />
                     
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-extrabold text-black tracking-tight mb-2">
@@ -258,10 +304,6 @@ const Profile: React.FC = () => {
                                     <p className="text-sm font-bold text-gray-900">{profile.dependents || '0'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Academic Score</p>
-                                    <p className="text-sm font-bold text-gray-900">{profile.academicScore || '0'}%</p>
-                                </div>
-                                <div>
                                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Priority Tags</p>
                                     <div className="flex flex-wrap gap-1 mt-1">
                                         {profile.orphaned && <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-bold rounded">ORPHAN</span>}
@@ -339,23 +381,33 @@ const Profile: React.FC = () => {
                                     </div>
 
                                     <div className="col-span-1 md:col-span-2">
-                                        <Input
+                                        <SearchableSelect
                                             label="Institution"
                                             name="institution"
+                                            placeholder={profile.education_level === 'TERTIARY' ? "Search for your university or college..." : "Type your school name..."}
                                             value={profile.institution || ''}
-                                            onChange={handleChange}
+                                            onChange={(val) => setProfile(prev => prev ? { ...prev, institution: val } : prev)}
+                                            onFetchOptions={handleFetchInstitutions}
                                             required
+                                            footerLabel="Institutions Found"
+                                            footerSource="Global Directory"
                                         />
                                     </div>
 
                                     {(!profile.education_level || profile.education_level === 'TERTIARY') && (
-                                        <Input
-                                            label="Course"
-                                            name="course"
-                                            value={profile.course || ''}
-                                            onChange={handleChange}
-                                            required
-                                        />
+                                        <div className="col-span-1 md:col-span-2">
+                                            <SearchableSelect
+                                                label="Course"
+                                                name="course"
+                                                placeholder="Search for your degree or diploma..."
+                                                value={profile.course || ''}
+                                                onChange={(val) => setProfile(prev => prev ? { ...prev, course: val } : prev)}
+                                                onFetchOptions={handleFetchCourses}
+                                                required
+                                                footerLabel="Courses Found"
+                                                footerSource="System Registry"
+                                            />
+                                        </div>
                                     )}
 
                                     <Input
@@ -416,15 +468,6 @@ const Profile: React.FC = () => {
                                             type="number"
                                             name="dependents"
                                             value={profile.dependents || 0}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                        <Input
-                                            label="Current Academic Score (%)"
-                                            type="number"
-                                            max={100}
-                                            name="academicScore"
-                                            value={profile.academicScore || 0}
                                             onChange={handleChange}
                                             required
                                         />

@@ -6,7 +6,7 @@ import { Card } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "../../components/Table";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, ArrowLeft, Home } from "lucide-react";
 import Swal from "sweetalert2";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "../../components/Pagination";
@@ -246,22 +246,46 @@ export default function AdminApplications() {
     };
 
     const handleAutoEvaluate = async () => {
-        const confirmResult = await Swal.fire({
-            title: 'Run Auto-Evaluation?',
-            text: "This will process all PENDING applications, automatically approving highly deserving ones and rejecting those who do not meet the minimum need score.",
-            icon: 'warning',
-            input: 'number',
-            inputLabel: 'Enter the Cycle Year to evaluate (e.g. 2026)',
-            inputValue: new Date().getFullYear().toString(),
+        const { value: formValues } = await Swal.fire({
+            title: 'Run Equity-Based Auto-Evaluation',
+            text: "Evaluate all PENDING applications. You can set a fixed amount for all approved students to ensure equity.",
+            icon: 'info',
+            html: `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase text-left mb-1">Cycle Year</label>
+                        <input id="swal-year" type="number" class="w-full border border-gray-300 p-2 rounded-lg text-sm" value="${new Date().getFullYear()}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase text-left mb-1">Flat Amount (Optional - Enter for Equity)</label>
+                        <input id="swal-amount" type="number" placeholder="e.g. 5000" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                        <p class="text-[10px] text-gray-500 mt-1 text-left">Leave blank to use TAADA tiered recommendations.</p>
+                    </div>
+                </div>
+            `,
+            focusConfirm: false,
             showCancelButton: true,
-            confirmButtonText: 'Run Auto-Evaluation',
+            confirmButtonText: 'Process Applications',
+            confirmButtonColor: '#0052FF',
+            preConfirm: () => {
+                const year = (document.getElementById('swal-year') as HTMLInputElement).value;
+                const amount = (document.getElementById('swal-amount') as HTMLInputElement).value;
+                if (!year) {
+                    Swal.showValidationMessage('Cycle Year is required');
+                    return false;
+                }
+                return {
+                    year: parseInt(year, 10),
+                    amount: amount ? parseFloat(amount) : undefined
+                };
+            }
         });
 
-        if (!confirmResult.isConfirmed || !confirmResult.value) return;
+        if (!formValues) return;
 
         Swal.fire({
             title: 'Evaluating...',
-            text: 'Please wait while the system assesses the applications.',
+            text: 'Processing applications with TAADA equity intelligence...',
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
@@ -269,7 +293,7 @@ export default function AdminApplications() {
         });
 
         try {
-            const res = await autoEvaluateApplications(parseInt(confirmResult.value, 10));
+            const res = await autoEvaluateApplications(formValues.year, formValues.amount);
             const data = res.data;
             
             Swal.fire({
@@ -292,7 +316,25 @@ export default function AdminApplications() {
 
     return (
         <div className="space-y-6 relative">
-            <h1 className="text-2xl font-bold text-gray-900">Funding Applications</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => navigate('/admin')}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        title="Back to Dashboard"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                    >
+                        <Home size={14} />
+                        Go Home
+                    </button>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">Funding Applications</h1>
+            </div>
 
             {editApp && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

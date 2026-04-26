@@ -7,6 +7,8 @@ import { Button } from "../../components/Button";
 import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "../../components/Table";
+import { ArrowLeft, Home, UserCog } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type User = {
     id: number;
@@ -17,6 +19,7 @@ type User = {
 };
 
 export default function AdminUsers() {
+    const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,7 +67,28 @@ export default function AdminUsers() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">System Users Management</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => navigate('/admin')}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        title="Back to Dashboard"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                    >
+                        <Home size={14} />
+                        Go Home
+                    </button>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <UserCog className="text-blue-600" />
+                    System Users Management
+                </h1>
+            </div>
 
             {isSuper && (
                 <div className="mt-4">

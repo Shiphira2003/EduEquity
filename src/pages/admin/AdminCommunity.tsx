@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Users } from 'lucide-react';
+import { Send, Users, ArrowLeft, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import Swal from 'sweetalert2';
 
@@ -17,6 +18,7 @@ type Message = {
 };
 
 export default function AdminCommunity() {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -77,13 +79,31 @@ export default function AdminCommunity() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)] space-y-4">
-            <div className="flex items-center gap-2">
-                <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                    <Users size={20} />
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => navigate('/admin')}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        title="Back to Dashboard"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                    >
+                        <Home size={14} />
+                        Go Home
+                    </button>
                 </div>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Admin Community</h1>
-                    <p className="text-sm text-gray-500">Collaborate with fellow administrators</p>
+                <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                        <Users size={20} />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Admin Community</h1>
+                        <p className="text-sm text-gray-500">Collaborate with fellow administrators</p>
+                    </div>
                 </div>
             </div>
 

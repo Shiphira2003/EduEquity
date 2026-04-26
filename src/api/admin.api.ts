@@ -120,8 +120,8 @@ export const getAuditLogs = async (applicationId: string) => {
     return res.data;
 };
 
-export const autoEvaluateApplications = async (cycle_year: number) => {
-    const res = await api.post("/applications/auto-evaluate", { cycle_year });
+export const autoEvaluateApplications = async (cycle_year: number, flatAmount?: number) => {
+    const res = await api.post("/applications/auto-evaluate", { cycle_year, flatAmount });
     return res.data;
 };
 
@@ -182,7 +182,7 @@ export interface Disbursement {
     student_name: string;
     student_id: number;
     amount: string | number;
-    status: "PENDING" | "PROCESSED";
+    status: "PENDING" | "APPROVED" | "PROCESSED" | "PAID";
     reference_number: string | null;
     fund_source: string;
     disbursed_at: string | null;
@@ -227,6 +227,11 @@ export const updateDisbursement = async (
 
 export const deleteDisbursement = async (id: number) => {
     const res = await api.delete(`/admin/disbursements/${id}`);
+    return res.data;
+};
+
+export const generateBulkDisbursements = async () => {
+    const res = await api.post("/admin/bulk-disbursements");
     return res.data;
 };
 

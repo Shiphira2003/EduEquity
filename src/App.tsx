@@ -19,6 +19,8 @@ import AdminAnnouncements from "./pages/admin/AdminAnnouncements.tsx";
 import AdminFundSources from "./pages/admin/AdminFundSources.tsx";
 import AdminRanking from "./pages/admin/AdminRanking.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
+import PaymentSuccess from "./pages/admin/PaymentSuccess.tsx";
+import PaymentCancel from "./pages/admin/PaymentCancel.tsx";
 import StudentLayout from "./layouts/StudentLayout";
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./routes/ProtectedRoutes";
@@ -70,6 +72,8 @@ function App() {
                 <Route path="announcements" element={<AdminAnnouncements />} />
                 <Route path="fund-sources" element={<AdminFundSources />} />
                 <Route path="reports" element={<AdminReports />} />
+                <Route path="payment-success" element={<PaymentSuccess />} />
+                <Route path="payment-cancel" element={<PaymentCancel />} />
                 <Route
                     path="applications/:id/audit-logs"
                     element={<ApplicationAuditLogs />}

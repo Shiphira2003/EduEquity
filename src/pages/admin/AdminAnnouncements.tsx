@@ -5,8 +5,11 @@ import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableC
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import Swal from 'sweetalert2';
+import { ArrowLeft, Home, Megaphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminAnnouncements() {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const isSuper = user?.role === 'SUPER_ADMIN';
     const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -68,7 +71,28 @@ export default function AdminAnnouncements() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Broadcast Announcements</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => navigate('/admin')}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        title="Back to Dashboard"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                    >
+                        <Home size={14} />
+                        Go Home
+                    </button>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <Megaphone className="text-blue-600" />
+                    Broadcast Announcements
+                </h1>
+            </div>
 
             <Card>
                 <form onSubmit={handleCreate} className="space-y-4">

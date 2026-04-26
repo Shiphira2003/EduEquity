@@ -9,6 +9,7 @@ import { kenyaData } from "../data/kenya";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import Swal from "sweetalert2";
+import { SearchableSelect } from "../components/SearchableSelect";
 
 // --- Zod Schema ---
 const applicationSchema = z.object({
@@ -16,7 +17,6 @@ const applicationSchema = z.object({
     dependents: z.number().min(0, "Dependents must be 0 or greater"),
     orphaned: z.boolean().default(false),
     disabled: z.boolean().default(false),
-    academicScore: z.number().min(0, "Min 0").max(100, "Max 100"),
     otherHardships: z.string().optional(),
 
     bursaryTypes: z.array(z.string()).min(1, "Please select at least one bursary type"),
@@ -65,7 +65,6 @@ const StudentApplication = () => {
             dependents: 0,
             orphaned: false,
             disabled: false,
-            academicScore: 0,
             otherHardships: "",
             bursaryTypes: [],
             county: "",
@@ -112,7 +111,6 @@ const StudentApplication = () => {
                         if (profileData.dependents) form.setValue("dependents", parseInt(profileData.dependents));
                         if (profileData.orphaned !== undefined) form.setValue("orphaned", !!profileData.orphaned);
                         if (profileData.disabled !== undefined) form.setValue("disabled", !!profileData.disabled);
-                        if (profileData.academicScore) form.setValue("academicScore", parseFloat(profileData.academicScore));
                         if (profileData.institution) form.setValue("institution", profileData.institution);
                         if (profileData.course) form.setValue("course", profileData.course);
                         if (profileData.yearOfStudy) form.setValue("yearOfStudy", parseInt(profileData.yearOfStudy));
@@ -137,13 +135,33 @@ const StudentApplication = () => {
     const selectedCountyData = kenyaData.find(c => c.name === form.watch("county"));
     const constituencies = selectedCountyData ? selectedCountyData.constituencies : [];
 
+    const handleFetchInstitutions = async (query: string, level?: string) => {
+        try {
+            const res = await api.get(`/institutions/search?q=${encodeURIComponent(query)}&level=${level || ""}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Institution fetch error:", err);
+            return [];
+        }
+    };
+
+    const handleFetchCourses = async (query: string) => {
+        try {
+            const res = await api.get(`/courses/search?q=${encodeURIComponent(query)}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Course fetch error:", err);
+            return [];
+        }
+    };
+
     const handleSpecificFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File | null>>) => {
         if (e.target.files && e.target.files.length > 0) setter(e.target.files[0]);
     };
 
     const nextStep = async () => {
         let fieldsToValidate: (keyof ApplicationForm)[] = [];
-        if (step === 1) fieldsToValidate = ["familyIncome", "dependents", "orphaned", "disabled", "academicScore", "otherHardships"];
+        if (step === 1) fieldsToValidate = ["familyIncome", "dependents", "orphaned", "disabled", "otherHardships"];
         if (step === 2) fieldsToValidate = ["bursaryTypes", "county", "constituency", "feeBalance", "cycleYear"];
         
         const isValid = await form.trigger(fieldsToValidate);
@@ -187,7 +205,6 @@ const StudentApplication = () => {
                 formData.append("dependents", data.dependents.toString());
                 formData.append("orphaned", data.orphaned.toString());
                 formData.append("disabled", data.disabled.toString());
-                formData.append("academic_score", data.academicScore.toString());
                 formData.append("other_hardships", data.otherHardships || "");
                 formData.append("institution", data.institution);
                 formData.append("course", data.course || "");
@@ -311,22 +328,47 @@ const StudentApplication = () => {
                                 <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 font-sans">
                                     <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3">Academic Info (Auto-filled from registration)</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-500">Institution</label>
-                                            <input type="text" {...form.register("institution")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
+                                        <div className="md:col-span-2">
+                                            <SearchableSelect
+                                                label="Institution"
+                                                name="institution"
+                                                placeholder={form.watch("educationLevel") === 'TERTIARY' ? "Search for your university or college..." : "Type your school name..."}
+                                                value={form.watch("institution")}
+                                                onChange={(val) => form.setValue("institution", val)}
+                                                onFetchOptions={(q) => handleFetchInstitutions(q, form.watch("educationLevel"))}
+                                                required
+                                                error={form.formState.errors.institution?.message}
+                                                footerLabel="Institutions Found"
+                                                footerSource="Global Directory"
+                                            />
                                         </div>
+                                        {form.watch("educationLevel") === "TERTIARY" && (
+                                            <div className="md:col-span-2">
+                                                <SearchableSelect
+                                                    label="Course / Program"
+                                                    name="course"
+                                                    placeholder="Search for your degree or diploma..."
+                                                    value={form.watch("course") || ""}
+                                                    onChange={(val) => form.setValue("course", val)}
+                                                    onFetchOptions={handleFetchCourses}
+                                                    required={form.watch("educationLevel") === "TERTIARY"}
+                                                    error={form.formState.errors.course?.message}
+                                                    footerLabel="Courses Found"
+                                                    footerSource="System Registry"
+                                                />
+                                            </div>
+                                        )}
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-500">Course / Program</label>
-                                            <input type="text" {...form.register("course")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-500">Year of Study</label>
+                                            <label className="block text-xs font-medium text-gray-500">
+                                                {form.watch("educationLevel") === 'PRIMARY' ? 'Grade' : form.watch("educationLevel") === 'SECONDARY' ? 'Form' : 'Year of Study'}
+                                            </label>
                                             <input type="number" {...form.register("yearOfStudy", { valueAsNumber: true })} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-medium text-gray-500">Education Level</label>
                                             <select {...form.register("educationLevel")} className="mt-1 block w-full px-3 py-1.5 border border-zinc-200 rounded-lg bg-white/50 text-xs font-semibold">
-                                                <option value="SECONDARY">Secondary</option>
+                                                <option value="PRIMARY">Primary School</option>
+                                                <option value="SECONDARY">Secondary / High School</option>
                                                 <option value="TERTIARY">Tertiary / University</option>
                                             </select>
                                         </div>
@@ -355,11 +397,6 @@ const StudentApplication = () => {
                                     <div className="flex items-center">
                                         <input type="checkbox" {...form.register("disabled")} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
                                         <label className="ml-2 block text-sm text-gray-900">Do you have documented disabilities?</label>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Academic Score (%)</label>
-                                        <input type="number" {...form.register("academicScore", { valueAsNumber: true })} placeholder="e.g. 75" className="mt-1 block w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-primary focus:border-primary transition-all" />
-                                        {form.formState.errors.academicScore && <p className="text-red-500 text-xs mt-1">{form.formState.errors.academicScore.message}</p>}
                                     </div>
                                 </div>
 

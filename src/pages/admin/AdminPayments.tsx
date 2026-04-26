@@ -4,9 +4,11 @@ import api from '../../api/axios';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
-import { CreditCard, Hash, Calendar, DollarSign } from 'lucide-react';
+import { CreditCard, Hash, Calendar, DollarSign, ArrowLeft, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminPayments() {
+    const navigate = useNavigate();
     const { data: payments = [], isLoading } = useQuery({
         queryKey: ['adminPayments'],
         queryFn: async () => {
@@ -16,7 +18,7 @@ export default function AdminPayments() {
     });
 
     const getStatusVariant = (status: string) => {
-        if (status === 'PROCESSED' || status === 'COMPLETED') return 'success';
+        if (status === 'PROCESSED' || status === 'COMPLETED' || status === 'PAID') return 'success';
         if (status === 'FAILED') return 'error';
         return 'warning';
     };
@@ -24,11 +26,29 @@ export default function AdminPayments() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <CreditCard className="text-indigo-600" />
-                    Stripe Payment Log
-                </h1>
-                <p className="text-gray-500 text-sm mt-1">Immutable ledger of automated Stripe transactions and completed bursaries.</p>
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/admin')}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Home
+                        </button>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <CreditCard className="text-indigo-600" />
+                        Stripe Payment Log
+                    </h1>
+                </div>
+                <p className="text-gray-500 text-sm ml-12 italic">Immutable ledger of automated Stripe transactions and completed bursaries.</p>
             </div>
 
             <Card noPadding className="overflow-hidden border-0 shadow-xl shadow-gray-100">

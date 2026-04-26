@@ -23,6 +23,8 @@ import axios from "axios";
 import logo from "../images/logo.png";
 import registerImage from "../images/register-image.jpg";
 import Swal from "sweetalert2";
+import { SearchableSelect } from "../components/SearchableSelect";
+import api from "../api/axios";
 
 type StudentForm = {
     email: string;
@@ -76,6 +78,26 @@ export default function RegisterStudent() {
         // Reset constituency if county changes
         if (name === "county") {
             setForm(prev => ({ ...prev, constituency: "" }));
+        }
+    };
+
+    const handleFetchInstitutions = async (query: string, level?: string) => {
+        try {
+            const res = await api.get(`/institutions/search?q=${encodeURIComponent(query)}&level=${level || ""}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Institution fetch error:", err);
+            return [];
+        }
+    };
+
+    const handleFetchCourses = async (query: string) => {
+        try {
+            const res = await api.get(`/courses/search?q=${encodeURIComponent(query)}`);
+            return res.data.data || [];
+        } catch (err) {
+            console.error("Course fetch error:", err);
+            return [];
         }
     };
 
@@ -204,28 +226,34 @@ export default function RegisterStudent() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className={form.education_level === "TERTIARY" ? "" : "md:col-span-2"}>
-                                        <Input
+                                    <div className={form.education_level === "TERTIARY" ? "md:col-span-2" : "md:col-span-2"}>
+                                        <SearchableSelect
                                             label="Institution"
                                             name="institution"
-                                            placeholder={form.education_level === 'TERTIARY' ? "University of Nairobi" : "Prestige Academy"}
+                                            placeholder={form.education_level === 'TERTIARY' ? "Search for your university or college..." : "Type your school name..."}
                                             value={form.institution}
-                                            onChange={handleChange}
+                                            onChange={(val) => setForm(prev => ({ ...prev, institution: val }))}
+                                            onFetchOptions={(q) => handleFetchInstitutions(q, form.education_level)}
                                             required
-                                            startIcon={<Building2 className="w-5 h-5" />}
+                                            footerLabel="Institutions Found"
+                                            footerSource="Global Directory"
                                         />
                                     </div>
 
                                     {form.education_level === "TERTIARY" && (
-                                        <Input
-                                            label="Course"
-                                            name="course"
-                                            placeholder="Computer Science"
-                                            value={form.course}
-                                            onChange={handleChange}
-                                            required
-                                            startIcon={<BookOpen className="w-5 h-5" />}
-                                        />
+                                        <div className="md:col-span-2">
+                                            <SearchableSelect
+                                                label="Course"
+                                                name="course"
+                                                placeholder="Search for your degree or diploma..."
+                                                value={form.course}
+                                                onChange={(val) => setForm(prev => ({ ...prev, course: val }))}
+                                                onFetchOptions={handleFetchCourses}
+                                                required
+                                                footerLabel="Courses Found"
+                                                footerSource="System Registry"
+                                            />
+                                        </div>
                                     )}
                                 </div>
 

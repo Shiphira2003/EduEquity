@@ -56,6 +56,13 @@ const MyApplications: React.FC = () => {
         }).format(Number(amount));
     };
 
+    const formatDate = (dateString: string | null | undefined, includeTime = false) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return includeTime ? date.toLocaleString() : date.toLocaleDateString();
+    };
+
     if (loading) return <div className="p-8 text-center text-gray-500">Loading applications...</div>;
 
     return (
@@ -85,8 +92,8 @@ const MyApplications: React.FC = () => {
                         {applications.length > 0 ? applications.map((app) => (
                             <TableRow key={app.id}>
                                 <TableCell className="font-medium text-gray-900">#{app.id}</TableCell>
-                                <TableCell>{app.financial_year || '-'}</TableCell>
-                                <TableCell>{new Date(app.created_at).toLocaleDateString()}</TableCell>
+                                <TableCell>{app.cycle_year || '-'}</TableCell>
+                                <TableCell>{formatDate(app.created_at)}</TableCell>
                                 <TableCell>
                                     <Badge variant={getStatusVariant(app.status)}>
                                         {app.status}
@@ -123,7 +130,7 @@ const MyApplications: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-100">
                             <div>
                                 <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Application ID</h4>
-                                <p className="mt-1 text-sm font-bold text-gray-900">#{selectedApp.id} ({selectedApp.financial_year || 'N/A'})</p>
+                                <p className="mt-1 text-sm font-bold text-gray-900">#{selectedApp.id} ({selectedApp.cycle_year || 'N/A'})</p>
                             </div>
                             <div>
                                 <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Requested Award</h4>
@@ -141,7 +148,7 @@ const MyApplications: React.FC = () => {
                                 <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] ml-4 md:ml-0 md:pl-4">
                                     <div className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-sm">
                                         <span className="font-bold text-slate-900 text-sm">Application Received</span>
-                                        <span className="text-xs text-slate-500">{new Date(selectedApp.created_at).toLocaleString()}</span>
+                                        <span className="text-xs text-slate-500">{formatDate(selectedApp.created_at, true)}</span>
                                     </div>
                                 </div>
                             </div>

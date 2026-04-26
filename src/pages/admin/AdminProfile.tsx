@@ -4,10 +4,12 @@ import { Button } from '../../components/Button';
 import { AvatarSelector, AvatarDisplay } from '../../components/AvatarSelector';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { Edit2, Shield, Mail, CreditCard } from 'lucide-react';
+import { Edit2, Shield, Mail, CreditCard, ArrowLeft, Home } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminProfile() {
+    const navigate = useNavigate();
     const { loginUser, user } = useAuth();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -81,6 +83,22 @@ export default function AdminProfile() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
+            <div className="flex items-center gap-2">
+                <button 
+                    onClick={() => navigate('/admin')}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                    title="Back to Dashboard"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <button 
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                >
+                    <Home size={14} />
+                    Go Home
+                </button>
+            </div>
             {/* Admin Profile Header */}
             <div className="bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden relative p-8">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full -mr-40 -mt-40 blur-3xl opacity-50" />

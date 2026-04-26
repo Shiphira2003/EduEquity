@@ -3,7 +3,8 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
 import api from '../../api/axios';
-import { DownloadCloud } from 'lucide-react';
+import { DownloadCloud, ArrowLeft, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Export Libraries
 import jsPDF from 'jspdf';
@@ -12,6 +13,7 @@ import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, Table, TableRow as DocxTableRow, TableCell as DocxTableCell, TextRun, WidthType } from 'docx';
 
 export default function AdminAuditLogs() {
+    const navigate = useNavigate();
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -114,7 +116,25 @@ export default function AdminAuditLogs() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-2xl font-bold text-gray-900">System Audit Logs</h1>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/admin')}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Home
+                        </button>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900">System Audit Logs</h1>
+                </div>
 
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 flex items-center gap-1">

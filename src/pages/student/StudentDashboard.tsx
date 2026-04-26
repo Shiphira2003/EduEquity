@@ -14,7 +14,8 @@ import {
     Bell,
     Lock,
     Plus,
-    Target
+    Target,
+    Home
 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -89,6 +90,13 @@ const StudentDashboard: React.FC = () => {
         }
     };
 
+    const formatDate = (dateString: string | null | undefined, options?: Intl.DateTimeFormatOptions) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString(undefined, options);
+    };
+
     const now = new Date();
     const openBursaries = publicFundSources.filter(b => {
         if (!b.is_open) return false;
@@ -104,6 +112,15 @@ const StudentDashboard: React.FC = () => {
             {/* Personalized Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-zinc-100 pb-10 mb-2">
                 <div className="animate-fade-in">
+                    <div className="flex items-center gap-3 mb-2">
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Back Home
+                        </button>
+                    </div>
                     <h1 className="text-4xl font-black text-black tracking-tight mb-2">
                         Welcome back, <span className="text-primary">{user?.fullName ? user.fullName.split(' ')[0] : 'Student'}!</span>
                     </h1>
@@ -170,7 +187,7 @@ const StudentDashboard: React.FC = () => {
                                 </div>
 
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">
-                                    {latestApp ? `${latestApp.financial_year || 'Current'} Application` : 'No Active Application'}
+                                    {latestApp ? `${latestApp.cycle_year || 'Current'} Application` : 'No Active Application'}
                                 </h3>
                                 
                                 {latestApp?.status === 'PENDING' && (
@@ -257,7 +274,7 @@ const StudentDashboard: React.FC = () => {
                                             {hasOpenBursaries ? openBursaries.map((b: any) => (
                                                 <li key={b.id} className="flex flex-col text-xs border-l-2 border-green-500 pl-2 bg-green-50/50 p-1 rounded-r">
                                                     <span className="font-semibold text-green-700">{b.name} ({b.cycle_year}): Open</span>
-                                                    <span className="text-gray-500">Closes: {b.end_date ? new Date(b.end_date).toLocaleDateString() : 'Ongoing'}</span>
+                                                    <span className="text-gray-500">Closes: {formatDate(b.end_date)}</span>
                                                 </li>
                                             )) : (
                                                 <li className="flex flex-col text-xs border-l-2 border-red-500 pl-2 bg-red-50/50 p-1 rounded-r">
@@ -292,10 +309,10 @@ const StudentDashboard: React.FC = () => {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-sm font-semibold text-gray-900">Application Submitted</p>
-                                            <p className="text-xs text-gray-500">Bursary Application {app.financial_year}</p>
+                                            <p className="text-xs text-gray-500">Bursary Application {app.cycle_year}</p>
                                         </div>
                                         <span className="text-xs text-gray-400">
-                                            {new Date(app.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            {formatDate(app.created_at || Date.now(), { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                 ))

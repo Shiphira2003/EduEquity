@@ -3,12 +3,14 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '../../components/Table';
 import api from '../../api/axios';
-import { Edit2, Trash2, Lock } from 'lucide-react';
+import { Edit2, Trash2, Lock, ArrowLeft, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pagination } from '../../components/Pagination';
 
 export default function AdminStudents() {
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const limit = 10;
     const queryClient = useQueryClient();
@@ -111,7 +113,25 @@ export default function AdminStudents() {
 
     return (
         <div className="space-y-6 relative">
-            <h1 className="text-2xl font-bold text-gray-900">Registered Students</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => navigate('/admin')}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        title="Back to Dashboard"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                    >
+                        <Home size={14} />
+                        Go Home
+                    </button>
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">Registered Students</h1>
+            </div>
 
             {editStudent && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

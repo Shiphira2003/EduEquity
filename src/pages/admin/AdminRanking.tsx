@@ -5,10 +5,12 @@ import { Card } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { TableContainer, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "../../components/Table";
-import { Award, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Award, TrendingUp, AlertCircle, CheckCircle2, ArrowLeft, Home } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 import Swal from "sweetalert2";
 
 export default function AdminRanking() {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [cycleYear, setCycleYear] = useState(new Date().getFullYear());
     const [bursaryType, setBursaryType] = useState<string>("");
@@ -87,12 +89,30 @@ export default function AdminRanking() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <Award className="text-blue-600" />
-                        Equity Ranking Dashboard
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1">Applications prioritized by TAADA need scores and priority tiers.</p>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => navigate('/admin')}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            title="Back to Dashboard"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-all bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md"
+                        >
+                            <Home size={14} />
+                            Go Home
+                        </button>
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <Award className="text-blue-600" />
+                            Equity Ranking Dashboard
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-1">Applications prioritized by TAADA need scores and priority tiers.</p>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">

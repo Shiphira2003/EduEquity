@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import api from '../api/axios';
-import { Users, FileText, Banknote, ClipboardList, Shield } from 'lucide-react';
+import { Users, FileText, Banknote, ClipboardList, Shield, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+import { useNavigate } from 'react-router-dom';
+
 export default function AdminDashboard() {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -36,9 +39,18 @@ export default function AdminDashboard() {
                     </h1>
                     <p className="text-zinc-500 font-medium">BursarHub system-wide management and analytics overview.</p>
                 </div>
-                <div className={`flex items-center gap-2 px-4 py-2 ${user?.role === 'SUPER_ADMIN' ? 'bg-primary' : 'bg-zinc-900'} text-white rounded-xl shadow-lg`}>
-                    <Shield size={18} className={user?.role === 'SUPER_ADMIN' ? 'text-white' : 'text-primary'} />
-                    <span className="text-xs font-bold uppercase tracking-widest">{user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : 'Admin Control Panel'}</span>
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors border border-gray-100 hover:border-primary/20 bg-white rounded-xl shadow-sm"
+                    >
+                        <Home size={18} />
+                        Go Back Home
+                    </button>
+                    <div className={`flex items-center gap-2 px-4 py-2 ${user?.role === 'SUPER_ADMIN' ? 'bg-primary' : 'bg-zinc-900'} text-white rounded-xl shadow-lg`}>
+                        <Shield size={18} className={user?.role === 'SUPER_ADMIN' ? 'text-white' : 'text-primary'} />
+                        <span className="text-xs font-bold uppercase tracking-widest">{user?.role === 'SUPER_ADMIN' ? 'Super Admin Panel' : 'Admin Control Panel'}</span>
+                    </div>
                 </div>
             </div>
 

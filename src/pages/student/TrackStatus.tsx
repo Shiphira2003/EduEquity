@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar } from '../../components/Navbar';
-import { Footer } from '../../components/Footer';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
-import { CheckCircle2, Clock, XCircle, FileText, Banknote, AlertCircle, ChevronDown, Target, Users, Zap, Award, BarChart4 } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, FileText, Banknote, AlertCircle, ChevronDown, Target, Users, Zap, Award, BarChart4, Calendar } from 'lucide-react';
 
 interface ApplicationData {
     id: number;
     cycle_year: number;
     amount_requested: string;
     amount_allocated: string;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
     taada_flag: string;
     created_at: string;
     rejection_reason?: string;
@@ -79,44 +77,40 @@ const TrackStatus: React.FC = () => {
         }).format(Number(amount));
     };
 
+    const formatDate = (dateString: string | null | undefined) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+    };
+
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col bg-background font-sans">
-                <Navbar />
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                </div>
-                <Footer />
+            <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     if (applications.length === 0) {
         return (
-            <div className="min-h-screen flex flex-col bg-background font-sans">
-                <Navbar />
-                <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
-                    <div className="text-center bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-gray-200">
-                        <FileText className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">No Applications Found</h2>
-                        <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                            You haven't submitted any bursary applications yet. Start an application to track its progress here.
-                        </p>
-                        <a href="/student/apply" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition">
-                            Apply Now
-                        </a>
-                    </div>
-                </main>
-                <Footer />
+            <div className="max-w-4xl mx-auto w-full py-12 flex items-center justify-center">
+                <div className="text-center bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-gray-200 w-full">
+                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">No Applications Found</h2>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                        You haven't submitted any bursary applications yet. Start an application to track its progress here.
+                    </p>
+                    <Link to="/student/apply" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary hover:opacity-90 transition">
+                        Apply Now
+                    </Link>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-background font-sans">
-            <Navbar />
-            
-            <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+        <div className="space-y-8 animate-fade-in pb-12">
+            <div className="max-w-5xl mx-auto">
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Track Your Status</h1>
@@ -172,7 +166,7 @@ const TrackStatus: React.FC = () => {
                                         </div>
                                         <div className="ml-6 flex-1 pt-1">
                                             <h3 className="text-lg font-bold text-gray-900">Application Submitted</h3>
-                                            <p className="mt-1 text-sm text-gray-600">Your application was successfully received on {new Date(selectedApp.created_at).toLocaleDateString()}.</p>
+                                            <p className="mt-1 text-sm text-gray-600">Your application was successfully received on {formatDate(selectedApp.created_at)}.</p>
                                         </div>
                                     </li>
 
@@ -390,9 +384,7 @@ const TrackStatus: React.FC = () => {
                     )}
                 </div>
             )}
-            </main>
-            
-            <Footer />
+            </div>
         </div>
     );
 };
