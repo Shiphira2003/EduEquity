@@ -10,7 +10,7 @@ import { Footer } from "../components/Footer";
 import logo from "../images/logo.png";
 import loginImage from "../images/login-image.jpg";
 import Swal from "sweetalert2";
-import { User, ShieldCheck, ArrowRight, Mail, Lock } from "lucide-react";
+import { User, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function Login() {
     const [email, setEmail] = useState("");

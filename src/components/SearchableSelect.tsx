@@ -38,7 +38,6 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     const [query, setQuery] = useState(value);
     const [options, setOptions] = useState<Option[]>([]);
     const [loading, setLoading] = useState(false);
-    const [touched, setTouched] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Fetch default options when first opened or when query is cleared
@@ -192,7 +191,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 )}
             </div>
 
-            {error && touched && (
+            {error && (
                 <p className="mt-2 text-xs font-bold text-red-500 px-1 animate-shake">
                     {error}
                 </p>

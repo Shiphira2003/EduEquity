@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 export default function PaymentSuccess() {
     const [searchParams] = useSearchParams();

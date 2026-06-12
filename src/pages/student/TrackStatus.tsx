@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
-import { CheckCircle2, Clock, XCircle, FileText, Banknote, AlertCircle, ChevronDown, Target, Users, Zap, Award, BarChart4, Calendar } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, FileText, Banknote, AlertCircle, ChevronDown, Target, Users, Zap, Award, BarChart4 } from 'lucide-react';
 
 interface ApplicationData {
     id: number;

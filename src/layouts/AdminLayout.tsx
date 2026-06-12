@@ -19,10 +19,7 @@ import {
     Award,
     X,
     BarChart4,
-    CreditCard,
-    Home,
-    Info,
-    FileSpreadsheet
+    CreditCard
 } from 'lucide-react';
 import logo from '../images/logo.png';
 

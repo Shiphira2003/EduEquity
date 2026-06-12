@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { Send, Users, ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

@@ -13,8 +13,6 @@ import {
     Mail,
     CreditCard,
     Lock,
-    Building2,
-    BookOpen,
     Calendar,
     ArrowRight,
     Landmark
